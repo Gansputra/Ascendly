@@ -1,5 +1,7 @@
 import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/models/social_models.dart';
+import 'package:ascendly/models/achievement_model.dart';
+import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DatabaseService {
@@ -71,8 +73,44 @@ class DatabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getFriends(String userId) async {
-    // This query would ideally join with the profiles table
     final response = await _client.from('friendships').select('*, profiles!user_two_id(*)').eq('user_one_id', userId);
     return response as List<Map<String, dynamic>>;
+  }
+
+  // Achievements
+  Future<List<Achievement>> getAchievements() async {
+    final response = await _client.from('achievements').select().order('condition_value');
+    return (response as List).map((a) => Achievement.fromJson(a)).toList();
+  }
+
+  Future<List<UserAchievement>> getUserAchievements(String userId) async {
+    final response = await _client
+        .from('user_achievements')
+        .select('*, achievements(*)')
+        .eq('user_id', userId);
+    return (response as List).map((ua) => UserAchievement.fromJson(ua)).toList();
+  }
+
+  Future<void> unlockAchievement(String userId, String achievementId) async {
+    try {
+      await _client.from('user_achievements').insert({
+        'user_id': userId,
+        'achievement_id': achievementId,
+        'unlocked_at': DateTime.now().toUtc().toIso8601String(),
+      });
+    } catch (e) {
+      // Achievement might already be unlocked (duplicate key)
+      debugPrint('Achievement already unlocked or error: $e');
+    }
+  }
+
+  Future<void> incrementEmergencyUse(String userId) async {
+    final profile = await getProfile(userId);
+    if (profile == null) return;
+    
+    // Assuming we add this column to profiles
+    await _client.from('profiles').update({
+      'emergency_uses': (profile.toJson()['emergency_uses'] ?? 0) + 1,
+    }).eq('id', userId);
   }
 }

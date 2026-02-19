@@ -1,4 +1,5 @@
 import 'package:ascendly/core/theme.dart';
+import 'package:ascendly/services/achievement_service.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -19,7 +20,10 @@ class EmergencyButton extends StatelessWidget {
         ),
         const SizedBox(height: 12),
         InkWell(
-          onTap: () => _showEmergencyDialog(context),
+          onTap: () {
+            DatabaseService().incrementEmergencyUse(AuthService().currentUser!.id);
+            _showEmergencyDialog(context);
+          },
           borderRadius: BorderRadius.circular(50),
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
@@ -58,13 +62,17 @@ class EmergencyButton extends StatelessWidget {
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.pop(context),
+            onPressed: () {
+              Navigator.pop(context);
+              AchievementService().checkAchievements(AuthService().currentUser!.id, context: context);
+            },
             child: const Text('I\'m staying strong'),
           ),
           TextButton(
             onPressed: () async {
               final auth = AuthService();
               final db = DatabaseService();
+              final achievementService = AchievementService();
               await db.resetStreak(auth.currentUser!.id);
               if (context.mounted) {
                 Navigator.pop(context);
@@ -72,6 +80,8 @@ class EmergencyButton extends StatelessWidget {
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Streak reset. Let\'s start again.')),
                 );
+                // Check achievements after reset (e.g., "Comeback King" or total relapses)
+                achievementService.checkAchievements(auth.currentUser!.id, context: context);
               }
             },
             child: const Text(

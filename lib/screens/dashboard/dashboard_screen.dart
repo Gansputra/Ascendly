@@ -6,6 +6,7 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:ascendly/widgets/emergency_button.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ascendly/services/achievement_service.dart';
 import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -53,6 +54,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _currentDuration = DateTime.now().toUtc().difference(profile!.streakStartDate!.toUtc());
         }
       });
+      // Check achievements after loading profile
+      AchievementService().checkAchievements(_authService.currentUser!.id, context: context);
     }
   }
 

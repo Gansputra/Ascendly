@@ -1,6 +1,7 @@
 import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/screens/auth/login_screen.dart';
+import 'package:ascendly/screens/profile/badges_screen.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -83,6 +84,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     'Feb 2024', // Simplified for demo
                     LucideIcons.calendar,
                   ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen()));
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildProfileTile(
+                      'My Achievements',
+                      'View your badges',
+                      LucideIcons.medal,
+                      trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                    ),
+                  ),
                   const SizedBox(height: 48),
                   ElevatedButton(
                     onPressed: _logout,
@@ -99,7 +113,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileTile(String title, String subtitle, IconData icon) {
+  Widget _buildProfileTile(String title, String subtitle, IconData icon, {Widget? trailing}) {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -110,13 +124,16 @@ class _ProfileScreenState extends State<ProfileScreen> {
         children: [
           Icon(icon, color: AppTheme.primaryColor),
           const SizedBox(width: 16),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-              Text(subtitle, style: const TextStyle(fontWeight: FontWeight.bold)),
-            ],
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+                Text(subtitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+              ],
+            ),
           ),
+          if (trailing != null) trailing,
         ],
       ),
     );

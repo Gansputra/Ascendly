@@ -5,6 +5,7 @@ class UserProfile {
   final DateTime? streakStartDate;
   final int totalDaysCleared;
   final int bestStreak;
+  final int emergencyUses;
   final DateTime createdAt;
 
   UserProfile({
@@ -14,6 +15,7 @@ class UserProfile {
     this.streakStartDate,
     this.totalDaysCleared = 0,
     this.bestStreak = 0,
+    this.emergencyUses = 0,
     required this.createdAt,
   });
 
@@ -27,6 +29,7 @@ class UserProfile {
           : null,
       totalDaysCleared: json['total_days_cleared'] ?? 0,
       bestStreak: json['best_streak'] ?? 0,
+      emergencyUses: json['emergency_uses'] ?? 0,
       createdAt: DateTime.parse(json['created_at']),
     );
   }
@@ -39,6 +42,7 @@ class UserProfile {
       'streak_start_date': streakStartDate?.toIso8601String(),
       'total_days_cleared': totalDaysCleared,
       'best_streak': bestStreak,
+      'emergency_uses': emergencyUses,
     };
   }
 
