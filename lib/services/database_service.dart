@@ -108,9 +108,15 @@ class DatabaseService {
     final profile = await getProfile(userId);
     if (profile == null) return;
     
-    // Assuming we add this column to profiles
     await _client.from('profiles').update({
       'emergency_uses': (profile.toJson()['emergency_uses'] ?? 0) + 1,
+    }).eq('id', userId);
+  }
+
+  Future<void> updateXPAndLevel(String userId, int newXP, int newLevel) async {
+    await _client.from('profiles').update({
+      'xp': newXP,
+      'level': newLevel,
     }).eq('id', userId);
   }
 }

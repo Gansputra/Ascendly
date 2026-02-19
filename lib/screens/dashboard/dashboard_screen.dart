@@ -7,6 +7,7 @@ import 'package:ascendly/widgets/emergency_button.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:ascendly/services/achievement_service.dart';
+import 'package:ascendly/services/gamification_service.dart';
 import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -154,6 +155,33 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               'REAL-TIME PROGRESS',
                               style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 2),
                             ),
+                            const SizedBox(height: 24),
+                            // XP Progress Bar
+                            if (_profile != null) ...[
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                children: [
+                                  Text(
+                                    'Level ${_profile!.level}',
+                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  ),
+                                  Text(
+                                    '${_profile!.xp} / ${GamificationService().xpForNextLevel(_profile!.level)} XP',
+                                    style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              ClipRRect(
+                                borderRadius: BorderRadius.circular(10),
+                                child: LinearProgressIndicator(
+                                  value: _profile!.xp / GamificationService().xpForNextLevel(_profile!.level),
+                                  backgroundColor: Colors.white.withOpacity(0.1),
+                                  valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
+                                  minHeight: 8,
+                                ),
+                              ),
+                            ],
                           ],
                         ),
                       ),

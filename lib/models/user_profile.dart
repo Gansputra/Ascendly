@@ -6,6 +6,8 @@ class UserProfile {
   final int totalDaysCleared;
   final int bestStreak;
   final int emergencyUses;
+  final int xp;
+  final int level;
   final DateTime createdAt;
 
   UserProfile({
@@ -16,6 +18,8 @@ class UserProfile {
     this.totalDaysCleared = 0,
     this.bestStreak = 0,
     this.emergencyUses = 0,
+    this.xp = 0,
+    this.level = 1,
     required this.createdAt,
   });
 
@@ -30,6 +34,8 @@ class UserProfile {
       totalDaysCleared: json['total_days_cleared'] ?? 0,
       bestStreak: json['best_streak'] ?? 0,
       emergencyUses: json['emergency_uses'] ?? 0,
+      xp: json['xp'] ?? 0,
+      level: json['level'] ?? 1,
       createdAt: DateTime.parse(json['created_at']),
     );
   }
@@ -43,6 +49,8 @@ class UserProfile {
       'total_days_cleared': totalDaysCleared,
       'best_streak': bestStreak,
       'emergency_uses': emergencyUses,
+      'xp': xp,
+      'level': level,
     };
   }
 

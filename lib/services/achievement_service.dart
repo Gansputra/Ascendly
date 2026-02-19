@@ -1,6 +1,7 @@
 import 'package:ascendly/models/achievement_model.dart';
 import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/services/database_service.dart';
+import 'package:ascendly/services/gamification_service.dart';
 import 'package:flutter/material.dart';
 
 class AchievementService {
@@ -50,6 +51,8 @@ class AchievementService {
 
       if (shouldUnlock) {
         await _db.unlockAchievement(userId, achievement.id);
+        // Award XP for unlocking achievement
+        GamificationService().addXP(userId, 50, context: context);
         if (context != null && context.mounted) {
           _showUnlockNotification(context, achievement);
         }
