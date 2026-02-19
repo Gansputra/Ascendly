@@ -2,6 +2,7 @@ import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/models/social_models.dart';
 import 'package:ascendly/models/achievement_model.dart';
 import 'package:ascendly/models/quest_model.dart';
+import 'package:ascendly/models/journal_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -163,5 +164,23 @@ class DatabaseService {
       'quest_id': questId,
       'last_completed_at': DateTime.now().toUtc().toIso8601String(),
     });
+  }
+
+  // Journals
+  Future<void> addJournalEntry(Journal journal) async {
+    await _client.from('journals').insert(journal.toJson());
+  }
+
+  Future<bool> hasJournalToday(String userId) async {
+    final now = DateTime.now().toUtc();
+    final startOfDay = DateTime(now.year, now.month, now.day).toIso8601String();
+    
+    final response = await _client
+        .from('journals')
+        .select()
+        .eq('user_id', userId)
+        .gte('created_at', startOfDay);
+        
+    return (response as List).isNotEmpty;
   }
 }

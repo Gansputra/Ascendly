@@ -7,6 +7,7 @@ import 'package:ascendly/widgets/emergency_button.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:ascendly/models/quest_model.dart';
+import 'package:ascendly/models/journal_model.dart';
 import 'package:ascendly/services/achievement_service.dart';
 import 'package:ascendly/services/gamification_service.dart';
 import 'package:ascendly/services/database_service.dart';
@@ -27,6 +28,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   bool _isLoading = true;
   late Timer _timer;
   Duration _currentDuration = Duration.zero;
+  bool _hasJournalToday = false;
 
   @override
   void initState() {
@@ -49,10 +51,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _loadProfile() async {
     final profile = await _dbService.getProfile(_authService.currentUser!.id);
+    final hasJournal = await _dbService.hasJournalToday(_authService.currentUser!.id);
+    
     if (mounted) {
       setState(() {
         _profile = profile;
         _isLoading = false;
+        _hasJournalToday = hasJournal;
         if (profile?.streakStartDate != null) {
           _currentDuration = DateTime.now().toUtc().difference(profile!.streakStartDate!.toUtc());
         }
@@ -233,12 +238,151 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     ),
+                    const SizedBox(height: 32),
+                    FadeInUp(
+                      delay: const Duration(milliseconds: 300),
+                      child: GestureDetector(
+                        onTap: _hasJournalToday ? null : _showJournalModal,
+                        child: Container(
+                          padding: const EdgeInsets.all(20),
+                          decoration: BoxDecoration(
+                            gradient: _hasJournalToday 
+                              ? LinearGradient(colors: [Colors.green.withOpacity(0.2), Colors.green.withOpacity(0.05)])
+                              : LinearGradient(colors: [AppTheme.primaryColor.withOpacity(0.2), AppTheme.primaryColor.withOpacity(0.05)]),
+                            borderRadius: BorderRadius.circular(24),
+                            border: Border.all(color: _hasJournalToday ? Colors.green.withOpacity(0.3) : AppTheme.primaryColor.withOpacity(0.3)),
+                          ),
+                          child: Row(
+                            children: [
+                              Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: _hasJournalToday ? Colors.green.withOpacity(0.2) : AppTheme.primaryColor.withOpacity(0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  _hasJournalToday ? Icons.check_circle : Icons.edit_note,
+                                  color: _hasJournalToday ? Colors.green : AppTheme.primaryColor,
+                                ),
+                              ),
+                              const SizedBox(width: 16),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      _hasJournalToday ? 'Check-in Complete' : 'Daily Check-in',
+                                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                    ),
+                                    Text(
+                                      _hasJournalToday ? 'Come back tomorrow!' : 'How are you feeling today?',
+                                      style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 12),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              if (!_hasJournalToday)
+                                const Icon(Icons.arrow_forward_ios, size: 16, color: Colors.white24),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                     const SizedBox(height: 40),
                     Center(child: EmergencyButton(onReset: _loadProfile)),
                   ],
                 ),
               ),
             ),
+    );
+  }
+
+  void _showJournalModal() {
+    String selectedMood = 'happy';
+    final noteController = TextEditingController();
+    final moods = [
+      {'id': 'happy', 'emoji': '😊', 'label': 'Happy'},
+      {'id': 'strong', 'emoji': '💪', 'label': 'Strong'},
+      {'id': 'anxious', 'emoji': '😨', 'label': 'Anxious'},
+      {'id': 'sad', 'emoji': '😔', 'label': 'Sad'},
+      {'id': 'struggling', 'emoji': '😫', 'label': 'Struggling'},
+    ];
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 32,
+            left: 32,
+            right: 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('How are you feeling?', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const SizedBox(height: 24),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: moods.map((m) {
+                  final isSelected = selectedMood == m['id'];
+                  return GestureDetector(
+                    onTap: () => setModalState(() => selectedMood = m['id']!),
+                    child: Column(
+                      children: [
+                        Opacity(
+                          opacity: isSelected ? 1 : 0.4,
+                          child: Text(m['emoji']!, style: const TextStyle(fontSize: 32)),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(m['label']!, style: TextStyle(fontSize: 10, color: isSelected ? Colors.white : Colors.white24)),
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+              const SizedBox(height: 32),
+              TextField(
+                controller: noteController,
+                maxLines: 3,
+                decoration: InputDecoration(
+                  hintText: 'Any thoughts or notes for today?',
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+              ),
+              const SizedBox(height: 32),
+              SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
+                  onPressed: () async {
+                    final journal = Journal(
+                      userId: _authService.currentUser!.id,
+                      mood: selectedMood,
+                      note: noteController.text,
+                      createdAt: DateTime.now(),
+                    );
+                    await _dbService.addJournalEntry(journal);
+                    if (context.mounted) {
+                      Navigator.pop(context);
+                      _loadProfile();
+                      GamificationService().completeQuest(_authService.currentUser!.id, 'daily_journal', context: context);
+                    }
+                  },
+                  child: const Text('Save Check-in'),
+                ),
+              ),
+              const SizedBox(height: 32),
+            ],
+          ),
+        ),
+      ),
     );
   }
 
