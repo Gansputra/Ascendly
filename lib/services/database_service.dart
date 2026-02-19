@@ -73,8 +73,33 @@ class DatabaseService {
   }
 
   Future<List<Map<String, dynamic>>> getFriends(String userId) async {
-    final response = await _client.from('friendships').select('*, profiles!user_two_id(*)').eq('user_one_id', userId);
-    return response as List<Map<String, dynamic>>;
+    try {
+      // Fetch where user is either user_one or user_two
+      final res1 = await _client
+          .from('friendships')
+          .select('*, profiles:profiles!user_two_id(*)')
+          .eq('user_one_id', userId);
+          
+      final res2 = await _client
+          .from('friendships')
+          .select('*, profiles:profiles!user_one_id(*)')
+          .eq('user_two_id', userId);
+
+      // Merge and normalize the format for SocialScreen
+      List<Map<String, dynamic>> friends = [];
+      
+      for (var f in res1) {
+        if (f['profiles'] != null) friends.add(f);
+      }
+      for (var f in res2) {
+        if (f['profiles'] != null) friends.add(f);
+      }
+      
+      return friends;
+    } catch (e) {
+      debugPrint('Error fetching friends: $e');
+      return [];
+    }
   }
 
   // Achievements
