@@ -1,6 +1,7 @@
 import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/models/social_models.dart';
 import 'package:ascendly/models/achievement_model.dart';
+import 'package:ascendly/models/quest_model.dart';
 import 'package:flutter/foundation.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 
@@ -143,5 +144,24 @@ class DatabaseService {
       'xp': newXP,
       'level': newLevel,
     }).eq('id', userId);
+  }
+
+  // Quests
+  Future<List<Quest>> getQuests() async {
+    final response = await _client.from('quests').select();
+    return (response as List).map((q) => Quest.fromJson(q)).toList();
+  }
+
+  Future<List<UserQuest>> getUserQuests(String userId) async {
+    final response = await _client.from('user_quests').select().eq('user_id', userId);
+    return (response as List).map((uq) => UserQuest.fromJson(uq)).toList();
+  }
+
+  Future<void> completeQuest(String userId, String questId) async {
+    await _client.from('user_quests').upsert({
+      'user_id': userId,
+      'quest_id': questId,
+      'last_completed_at': DateTime.now().toUtc().toIso8601String(),
+    });
   }
 }

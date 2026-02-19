@@ -1,5 +1,6 @@
 import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/services/achievement_service.dart';
+import 'package:ascendly/services/gamification_service.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -55,7 +56,7 @@ class EmergencyButton extends StatelessWidget {
   void _showEmergencyDialog(BuildContext context) {
     showDialog(
       context: context,
-      builder: (context) => AlertDialog(
+      builder: (dialogContext) => AlertDialog(
         title: const Text('Take a Breath'),
         content: const Text(
           'The urge is temporary. You are stronger than this moment. Take 5 deep breaths. If you have already relapsed, be honest and reset your streak. Every day is a new chance.',
@@ -63,8 +64,10 @@ class EmergencyButton extends StatelessWidget {
         actions: [
           TextButton(
             onPressed: () {
-              Navigator.pop(context);
+              Navigator.pop(dialogContext); // Close dialog
+              // Use parent 'context' to trigger notifications on the main screen
               AchievementService().checkAchievements(AuthService().currentUser!.id, context: context);
+              GamificationService().completeQuest(AuthService().currentUser!.id, 'stay_strong', context: context);
             },
             child: const Text('I\'m staying strong'),
           ),
@@ -75,12 +78,11 @@ class EmergencyButton extends StatelessWidget {
               final achievementService = AchievementService();
               await db.resetStreak(auth.currentUser!.id);
               if (context.mounted) {
-                Navigator.pop(context);
+                Navigator.pop(dialogContext);
                 if (onReset != null) onReset!();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Streak reset. Let\'s start again.')),
                 );
-                // Check achievements after reset (e.g., "Comeback King" or total relapses)
                 achievementService.checkAchievements(auth.currentUser!.id, context: context);
               }
             },

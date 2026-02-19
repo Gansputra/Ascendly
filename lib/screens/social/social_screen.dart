@@ -2,6 +2,7 @@ import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/models/social_models.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
+import 'package:ascendly/services/gamification_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
@@ -206,6 +207,7 @@ class _ChatScreenState extends State<ChatScreen> {
                   widget.friendId,
                   _messageController.text,
                 );
+                GamificationService().completeQuest(_authService.currentUser!.id, 'social_chat', context: context);
                 _messageController.clear();
               }
             },

@@ -6,8 +6,10 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:ascendly/widgets/emergency_button.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ascendly/models/quest_model.dart';
 import 'package:ascendly/services/achievement_service.dart';
 import 'package:ascendly/services/gamification_service.dart';
+import 'package:ascendly/services/database_service.dart';
 import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
 
@@ -57,6 +59,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       });
       // Check achievements after loading profile
       AchievementService().checkAchievements(_authService.currentUser!.id, context: context);
+      // Complete daily login quest
+      GamificationService().completeQuest(_authService.currentUser!.id, 'daily_login', context: context);
     }
   }
 
@@ -161,9 +165,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                 children: [
-                                  Text(
-                                    'Level ${_profile!.level}',
-                                    style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        'Level ${_profile!.level}',
+                                        style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                                      ),
+                                      Text(
+                                        GamificationService().getLevelTitle(_profile!.level),
+                                        style: TextStyle(color: Colors.white.withOpacity(0.5), fontSize: 10, letterSpacing: 1),
+                                      ),
+                                    ],
                                   ),
                                   Text(
                                     '${_profile!.xp} / ${GamificationService().xpForNextLevel(_profile!.level)} XP',
@@ -180,6 +193,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                                   valueColor: const AlwaysStoppedAnimation<Color>(Colors.white),
                                   minHeight: 8,
                                 ),
+                              ),
+                              const SizedBox(height: 16),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: [
+                                  TextButton.icon(
+                                    onPressed: _showQuestsHub,
+                                    icon: const Icon(Icons.auto_awesome, size: 16, color: Colors.white70),
+                                    label: const Text('DAILY QUESTS', style: TextStyle(color: Colors.white70, fontSize: 10, letterSpacing: 1)),
+                                    style: TextButton.styleFrom(visualDensity: VisualDensity.compact),
+                                  ),
+                                ],
                               ),
                             ],
                           ],
@@ -214,6 +239,74 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
               ),
             ),
+    );
+  }
+
+  void _showQuestsHub() async {
+    final quests = await _dbService.getQuests();
+    final userQuests = await _dbService.getUserQuests(_authService.currentUser!.id);
+
+    if (!mounted) return;
+
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) {
+        return Padding(
+          padding: const EdgeInsets.all(32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Daily Quests', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('Complete tasks daily to earn bonus XP', style: TextStyle(color: AppTheme.textSecondary)),
+              const SizedBox(height: 24),
+              Flexible(
+                child: SingleChildScrollView(
+                  child: Column(
+                    children: [
+                      ...quests.map((q) {
+                        final isDone = userQuests.any((uq) => uq.questId == q.id && uq.isCompletedToday);
+                        return _buildQuestItem(q, isDone);
+                      }),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: 16),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildQuestItem(Quest quest, bool isDone) {
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white.withOpacity(0.03),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: isDone ? Colors.green.withOpacity(0.3) : Colors.transparent),
+      ),
+      child: Row(
+        children: [
+          Icon(isDone ? Icons.check_circle : Icons.circle_outlined, color: isDone ? Colors.green : Colors.grey),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(quest.title, style: TextStyle(fontWeight: FontWeight.bold, decoration: isDone ? TextDecoration.lineThrough : null)),
+                Text(quest.description, style: const TextStyle(fontSize: 12, color: AppTheme.textSecondary)),
+              ],
+            ),
+          ),
+          Text('+${quest.xpReward} XP', style: const TextStyle(color: Colors.amber, fontWeight: FontWeight.bold)),
+        ],
+      ),
     );
   }
 }
