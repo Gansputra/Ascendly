@@ -1,7 +1,7 @@
 import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/screens/auth/login_screen.dart';
-import 'package:ascendly/screens/dashboard/dashboard_screen.dart';
 import 'package:ascendly/screens/onboarding/personalization_screen.dart';
+import 'package:ascendly/screens/main_wrapper.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -38,7 +38,7 @@ class _SplashScreenState extends State<SplashScreen> {
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const MainWrapper()),
         );
       }
     } else {

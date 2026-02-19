@@ -1,6 +1,6 @@
 import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/models/user_profile.dart';
-import 'package:ascendly/screens/dashboard/dashboard_screen.dart';
+import 'package:ascendly/screens/main_wrapper.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -47,7 +47,7 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
       await _dbService.upsertProfile(profile);
       if (mounted) {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+          MaterialPageRoute(builder: (_) => const MainWrapper()),
         );
       }
     } catch (e) {

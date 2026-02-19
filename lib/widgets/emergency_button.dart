@@ -5,7 +5,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 
 class EmergencyButton extends StatelessWidget {
-  const EmergencyButton({super.key});
+  final VoidCallback? onReset;
+  
+  const EmergencyButton({super.key, this.onReset});
 
   @override
   Widget build(BuildContext context) {
@@ -66,7 +68,7 @@ class EmergencyButton extends StatelessWidget {
               await db.resetStreak(auth.currentUser!.id);
               if (context.mounted) {
                 Navigator.pop(context);
-                // Refresh logic would go here, maybe via provider
+                if (onReset != null) onReset!();
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Streak reset. Let\'s start again.')),
                 );

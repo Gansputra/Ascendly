@@ -1,19 +1,25 @@
 import 'package:ascendly/core/supabase_config.dart';
 import 'package:ascendly/core/theme.dart';
+import 'package:ascendly/providers/app_provider.dart';
 import 'package:ascendly/screens/splash_screen.dart';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   
-  // Initialize Supabase & DotEnv
   try {
     await SupabaseConfig.initialize();
   } catch (e) {
     debugPrint('Supabase/DotEnv initialization failed: $e');
   }
 
-  runApp(const AscendlyApp());
+  runApp(
+    ChangeNotifierProvider(
+      create: (_) => AppProvider(),
+      child: const AscendlyApp(),
+    ),
+  );
 }
 
 class AscendlyApp extends StatelessWidget {
@@ -21,10 +27,14 @@ class AscendlyApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final appProvider = Provider.of<AppProvider>(context);
+
     return MaterialApp(
       title: 'Ascendly',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.darkTheme,
+      theme: ThemeData.light(useMaterial3: true), // Define a basic light theme or use your custom one
+      darkTheme: AppTheme.darkTheme,
+      themeMode: appProvider.themeMode,
       home: const SplashScreen(),
     );
   }
