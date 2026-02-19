@@ -104,6 +104,25 @@ class DatabaseService {
     }
   }
 
+  Future<List<UserProfile>> searchUsers(String query) async {
+    // Search by nickname or exact ID
+    final response = await _client
+        .from('profiles')
+        .select()
+        .or('nickname.ilike.%$query%,id.eq.$query')
+        .limit(10);
+    
+    return (response as List).map((u) => UserProfile.fromJson(u)).toList();
+  }
+
+  Future<void> addFriend(String userId, String friendId) async {
+    await _client.from('friendships').insert({
+      'user_one_id': userId,
+      'user_two_id': friendId,
+      'status': 'accepted', // Auto-accept for now to simplify
+    });
+  }
+
   // Achievements
   Future<List<Achievement>> getAchievements() async {
     final response = await _client.from('achievements').select().order('condition_value');
@@ -182,5 +201,15 @@ class DatabaseService {
         .gte('created_at', startOfDay);
         
     return (response as List).isNotEmpty;
+  }
+
+  Future<List<Journal>> getJournalHistory(String userId) async {
+    final response = await _client
+        .from('journals')
+        .select()
+        .eq('user_id', userId)
+        .order('created_at', ascending: false);
+        
+    return (response as List).map((j) => Journal.fromJson(j)).toList();
   }
 }

@@ -48,7 +48,10 @@ class _SocialScreenState extends State<SocialScreen> {
       appBar: AppBar(
         title: const Text('Community'),
         actions: [
-          IconButton(icon: const Icon(LucideIcons.userPlus), onPressed: () {}),
+          IconButton(
+            icon: const Icon(LucideIcons.userPlus),
+            onPressed: _showAddFriendDialog,
+          ),
         ],
       ),
       body: _isLoading
@@ -113,6 +116,116 @@ class _SocialScreenState extends State<SocialScreen> {
             ),
             const Icon(LucideIcons.messageCircle, color: AppTheme.primaryColor),
           ],
+        ),
+      ),
+    );
+  }
+
+  void _showAddFriendDialog() {
+    final searchController = TextEditingController();
+    List<UserProfile> searchResults = [];
+    bool isSearching = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: AppTheme.surfaceColor,
+      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(32))),
+      builder: (context) => StatefulBuilder(
+        builder: (context, setModalState) => Padding(
+          padding: EdgeInsets.only(
+            bottom: MediaQuery.of(context).viewInsets.bottom,
+            top: 32,
+            left: 32,
+            right: 32,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text('Add Friend', style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              const Text('Search by Nickname or User ID', style: TextStyle(color: AppTheme.textSecondary, fontSize: 13)),
+              const SizedBox(height: 24),
+              TextField(
+                controller: searchController,
+                decoration: InputDecoration(
+                  hintText: 'Enter nickname or ID...',
+                  prefixIcon: const Icon(Icons.search),
+                  filled: true,
+                  fillColor: Colors.white.withOpacity(0.05),
+                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(16), borderSide: BorderSide.none),
+                ),
+                onChanged: (val) async {
+                  if (val.length < 3) {
+                    setModalState(() {
+                      searchResults = [];
+                    });
+                    return;
+                  }
+                  
+                  setModalState(() => isSearching = true);
+                  try {
+                    final results = await _dbService.searchUsers(val);
+                    setModalState(() {
+                      searchResults = results.where((u) => u.id != _authService.currentUser!.id).toList();
+                      isSearching = false;
+                    });
+                  } catch (e) {
+                    setModalState(() => isSearching = false);
+                  }
+                },
+              ),
+              const SizedBox(height: 16),
+              if (isSearching)
+                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+              else if (searchController.text.length >= 3 && searchResults.isEmpty)
+                const Center(child: Padding(padding: EdgeInsets.all(20), child: Text('No users found', style: TextStyle(color: Colors.white54))))
+              else
+                SizedBox(
+                  height: 300,
+                  child: ListView.builder(
+                    itemCount: searchResults.length,
+                    itemBuilder: (context, index) {
+                      final user = searchResults[index];
+                      final isAlreadyFriend = _friends.any((f) {
+                        try {
+                          return f['profiles']['id'] == user.id;
+                        } catch (e) {
+                          return false;
+                        }
+                      });
+                      
+                      return ListTile(
+                        contentPadding: EdgeInsets.zero,
+                        leading: const CircleAvatar(backgroundColor: AppTheme.primaryColor, child: Icon(Icons.person, color: Colors.white, size: 20)),
+                        title: Text(user.nickname, style: const TextStyle(fontWeight: FontWeight.bold)),
+                        subtitle: Text('ID: ${user.id.substring(0, 8)}...', style: const TextStyle(fontSize: 10, color: Colors.white24)),
+                        trailing: isAlreadyFriend 
+                          ? const Text('Friend', style: TextStyle(color: Colors.green, fontSize: 12))
+                          : ElevatedButton(
+                              onPressed: () async {
+                                await _dbService.addFriend(_authService.currentUser!.id, user.id);
+                                if (context.mounted) {
+                                  Navigator.pop(context);
+                                  _loadFriends();
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(content: Text('Added ${user.nickname} as friend!')),
+                                  );
+                                }
+                              },
+                              style: ElevatedButton.styleFrom(
+                                visualDensity: VisualDensity.compact,
+                                backgroundColor: AppTheme.primaryColor,
+                              ),
+                              child: const Text('Add', style: TextStyle(color: Colors.white, fontSize: 12)),
+                            ),
+                      );
+                    },
+                  ),
+                ),
+              const SizedBox(height: 16),
+            ],
+          ),
         ),
       ),
     );

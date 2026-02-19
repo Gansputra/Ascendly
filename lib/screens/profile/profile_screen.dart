@@ -2,6 +2,7 @@ import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/models/user_profile.dart';
 import 'package:ascendly/screens/auth/login_screen.dart';
 import 'package:ascendly/screens/profile/badges_screen.dart';
+import 'package:ascendly/screens/profile/journal_history_screen.dart';
 import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
@@ -94,6 +95,19 @@ class _ProfileScreenState extends State<ProfileScreen> {
                       'My Achievements',
                       'View your badges',
                       LucideIcons.medal,
+                      trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                    ),
+                  ),
+                  const SizedBox(height: 12),
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalHistoryScreen()));
+                    },
+                    borderRadius: BorderRadius.circular(16),
+                    child: _buildProfileTile(
+                      'My Mood History',
+                      'Check your progress',
+                      LucideIcons.heart,
                       trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
                     ),
                   ),
