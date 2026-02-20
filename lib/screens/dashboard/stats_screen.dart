@@ -91,30 +91,26 @@ class _StatsScreenState extends State<StatsScreen> {
 
   Widget _buildStatCard(String label, String value, IconData icon) {
     return Expanded(
-      child: Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Theme.of(context).colorScheme.surface,
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          children: [
-            Icon(icon, color: AppTheme.primaryColor),
-            const SizedBox(height: 8),
-            Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
-            Text(label, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-          ],
+      child: Card(
+        margin: EdgeInsets.zero,
+        child: Padding(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            children: [
+              Icon(icon, color: AppTheme.primaryColor),
+              const SizedBox(height: 8),
+              Text(value, style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold)),
+              Text(label, style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.6), fontSize: 12)),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildCalendar() {
-    return Container(
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-      ),
+    return Card(
+      margin: EdgeInsets.zero,
       child: TableCalendar(
         firstDay: DateTime.utc(2023, 01, 01),
         lastDay: DateTime.now(),
@@ -137,55 +133,56 @@ class _StatsScreenState extends State<StatsScreen> {
       return DateTime(now.year, now.month, now.day).subtract(Duration(days: 6 - index));
     });
 
-    return Container(
-      height: 200,
-      padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
-      decoration: BoxDecoration(
-        color: Theme.of(context).colorScheme.surface,
-        borderRadius: BorderRadius.circular(24),
-      ),
-      child: BarChart(
-        BarChartData(
-          alignment: BarChartAlignment.spaceAround,
-          maxY: 1,
-          barTouchData: BarTouchData(enabled: false),
-          titlesData: FlTitlesData(
-            leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
-            bottomTitles: AxisTitles(
-              sideTitles: SideTitles(
-                showTitles: true,
-                getTitlesWidget: (value, meta) {
-                  final date = last7Days[value.toInt()];
-                  return Padding(
-                    padding: const EdgeInsets.only(top: 8.0),
-                    child: Text(
-                      DateFormat('E').format(date)[0],
-                      style: const TextStyle(color: AppTheme.textSecondary, fontSize: 10),
-                    ),
-                  );
-                },
+    return Card(
+      margin: EdgeInsets.zero,
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 32, 16, 16),
+        child: SizedBox(
+          height: 152, // 200 - padding
+          child: BarChart(
+            BarChartData(
+              alignment: BarChartAlignment.spaceAround,
+              maxY: 1,
+              barTouchData: BarTouchData(enabled: false),
+              titlesData: FlTitlesData(
+                leftTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                rightTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                topTitles: AxisTitles(sideTitles: SideTitles(showTitles: false)),
+                bottomTitles: AxisTitles(
+                  sideTitles: SideTitles(
+                    showTitles: true,
+                    getTitlesWidget: (value, meta) {
+                      final date = last7Days[value.toInt()];
+                      return Padding(
+                        padding: const EdgeInsets.only(top: 8.0),
+                        child: Text(
+                          DateFormat('E').format(date)[0],
+                          style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.4), fontSize: 10),
+                        ),
+                      );
+                    },
+                  ),
+                ),
               ),
+              gridData: FlGridData(show: false),
+              borderData: FlBorderData(show: false),
+              barGroups: List.generate(7, (index) {
+                final date = last7Days[index];
+                final hasRelapsed = _relapses.any((r) => isSameDay(r.relapseDate, date));
+                return BarChartGroupData(
+                  x: index,
+                  barRods: [
+                    BarChartRodData(
+                      toY: hasRelapsed ? 0.2 : 1,
+                      color: hasRelapsed ? AppTheme.errorColor : AppTheme.primaryColor,
+                      width: 12,
+                      borderRadius: BorderRadius.circular(4),
+                    ),
+                  ],
+                );
+              }),
             ),
           ),
-          gridData: FlGridData(show: false),
-          borderData: FlBorderData(show: false),
-          barGroups: List.generate(7, (index) {
-            final date = last7Days[index];
-            final hasRelapsed = _relapses.any((r) => isSameDay(r.relapseDate, date));
-            return BarChartGroupData(
-              x: index,
-              barRods: [
-                BarChartRodData(
-                  toY: hasRelapsed ? 0.2 : 1,
-                  color: hasRelapsed ? AppTheme.errorColor : AppTheme.primaryColor,
-                  width: 12,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ],
-            );
-          }),
         ),
       ),
     );

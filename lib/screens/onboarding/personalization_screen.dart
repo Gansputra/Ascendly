@@ -106,38 +106,44 @@ class _PersonalizationScreenState extends State<PersonalizationScreen> {
                     final isSelected = _selectedGoal == goal['id'];
                     return FadeInRight(
                       delay: Duration(milliseconds: 100 * index),
-                      child: InkWell(
-                        onTap: () => setState(() => _selectedGoal = goal['id']),
-                        borderRadius: BorderRadius.circular(16),
-                        child: Container(
-                          padding: const EdgeInsets.all(20),
-                          decoration: BoxDecoration(
-                            color: isSelected ? AppTheme.primaryColor.withOpacity(0.1) : AppTheme.surfaceColor,
-                            borderRadius: BorderRadius.circular(16),
-                            border: Border.all(
-                              color: isSelected ? AppTheme.primaryColor : Colors.transparent,
-                              width: 2,
-                            ),
+                      child: Card(
+                        margin: EdgeInsets.zero,
+                        elevation: isSelected ? 4 : (Theme.of(context).brightness == Brightness.dark ? 0 : 2),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
+                          side: BorderSide(
+                            color: isSelected ? AppTheme.primaryColor : Colors.transparent,
+                            width: 2,
                           ),
-                          child: Row(
-                            children: [
-                              Icon(
-                                goal['icon'],
-                                color: isSelected ? AppTheme.primaryColor : AppTheme.textSecondary,
-                              ),
-                              const SizedBox(width: 16),
-                              Text(
-                                goal['label'],
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                                  color: isSelected ? Colors.white : AppTheme.textSecondary,
+                        ),
+                        color: isSelected 
+                            ? AppTheme.primaryColor.withOpacity(0.1) 
+                            : Theme.of(context).colorScheme.surface,
+                        child: InkWell(
+                          onTap: () => setState(() => _selectedGoal = goal['id']),
+                          borderRadius: BorderRadius.circular(16),
+                          child: Padding(
+                            padding: const EdgeInsets.all(20),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  goal['icon'],
+                                  color: isSelected ? AppTheme.primaryColor : Theme.of(context).colorScheme.onSurface.withOpacity(0.6),
                                 ),
-                              ),
-                              const Spacer(),
-                              if (isSelected)
-                                const Icon(LucideIcons.checkCircle2, color: AppTheme.primaryColor),
-                            ],
+                                const SizedBox(width: 16),
+                                Text(
+                                  goal['label'],
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+                                    color: isSelected ? AppTheme.primaryColor : Theme.of(context).colorScheme.onSurface,
+                                  ),
+                                ),
+                                const Spacer(),
+                                if (isSelected)
+                                  const Icon(LucideIcons.checkCircle2, color: AppTheme.primaryColor),
+                              ],
+                            ),
                           ),
                         ),
                       ),

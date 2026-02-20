@@ -57,7 +57,7 @@ class DatabaseService {
     return _client
         .from('messages')
         .stream(primaryKey: ['id'])
-        .order('created_at')
+        .order('created_at', ascending: false) // Order by newest first
         .map((data) => data
             .map((m) => Message.fromJson(m))
             .where((m) =>
@@ -80,12 +80,14 @@ class DatabaseService {
       final res1 = await _client
           .from('friendships')
           .select('*, profiles:profiles!user_two_id(*)')
-          .eq('user_one_id', userId);
+          .eq('user_one_id', userId)
+          .eq('status', 'accepted');
           
       final res2 = await _client
           .from('friendships')
           .select('*, profiles:profiles!user_one_id(*)')
-          .eq('user_two_id', userId);
+          .eq('user_two_id', userId)
+          .eq('status', 'accepted');
 
       // Merge and normalize the format for SocialScreen
       List<Map<String, dynamic>> friends = [];
@@ -105,22 +107,61 @@ class DatabaseService {
   }
 
   Future<List<UserProfile>> searchUsers(String query) async {
-    // Search by nickname or exact ID
-    final response = await _client
-        .from('profiles')
-        .select()
-        .or('nickname.ilike.%$query%,id.eq.$query')
-        .limit(10);
-    
-    return (response as List).map((u) => UserProfile.fromJson(u)).toList();
+    try {
+      // Regex to check if query is a valid UUID
+      final uuidRegex = RegExp(
+          r'^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$',
+          caseSensitive: false);
+
+      var request = _client.from('profiles').select();
+
+      if (uuidRegex.hasMatch(query)) {
+        // If it's a UUID, do an exact match on ID
+        request = request.eq('id', query);
+      } else {
+        // Otherwise, search by nickname
+        request = request.ilike('nickname', '%$query%');
+      }
+
+      final response = await request.limit(10);
+      return (response as List).map((u) => UserProfile.fromJson(u)).toList();
+    } catch (e) {
+      debugPrint('DatabaseService: searchUsers Error: $e');
+      return [];
+    }
   }
 
   Future<void> addFriend(String userId, String friendId) async {
     await _client.from('friendships').insert({
       'user_one_id': userId,
       'user_two_id': friendId,
-      'status': 'accepted', // Auto-accept for now to simplify
+      'status': 'pending',
     });
+  }
+
+  Future<List<Map<String, dynamic>>> getPendingRequests(String userId) async {
+    final response = await _client
+        .from('friendships')
+        .select('*, profiles:profiles!user_one_id(*)')
+        .eq('user_two_id', userId)
+        .eq('status', 'pending');
+    return (response as List).cast<Map<String, dynamic>>();
+  }
+
+  Future<void> acceptFriendRequest(String userId, String senderId) async {
+    await _client
+        .from('friendships')
+        .update({'status': 'accepted'})
+        .eq('user_one_id', senderId)
+        .eq('user_two_id', userId);
+  }
+
+  Future<void> declineFriendRequest(String userId, String senderId) async {
+    await _client
+        .from('friendships')
+        .delete()
+        .eq('user_one_id', senderId)
+        .eq('user_two_id', userId);
   }
 
   // Achievements

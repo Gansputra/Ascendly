@@ -32,7 +32,7 @@ class AscendlyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Ascendly',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData.light(useMaterial3: true), // Define a basic light theme or use your custom one
+      theme: AppTheme.lightTheme,
       darkTheme: AppTheme.darkTheme,
       themeMode: appProvider.themeMode,
       home: const SplashScreen(),

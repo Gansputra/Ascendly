@@ -16,7 +16,7 @@ class SettingsScreen extends StatelessWidget {
       body: ListView(
         padding: const EdgeInsets.all(16),
         children: [
-          _buildSectionHeader('Appearance'),
+          _buildSectionHeader(context, 'Appearance'),
           _buildSettingsTile(
             'Dark Mode',
             'Toggle between light and dark themes',
@@ -28,7 +28,7 @@ class SettingsScreen extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('Preferences'),
+          _buildSectionHeader(context, 'Preferences'),
           _buildSettingsTile(
             'Notifications',
             'Manage daily reminders',
@@ -42,7 +42,7 @@ class SettingsScreen extends StatelessWidget {
             onTap: () {},
           ),
           const SizedBox(height: 24),
-          _buildSectionHeader('About'),
+          _buildSectionHeader(context, 'About'),
           _buildSettingsTile(
             'Version',
             '1.1.0 (Advanced)',
@@ -53,12 +53,17 @@ class SettingsScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildSectionHeader(String title) {
+  Widget _buildSectionHeader(BuildContext context, String title) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       child: Text(
         title.toUpperCase(),
-        style: const TextStyle(color: AppTheme.textSecondary, fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 1),
+        style: TextStyle(
+          color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5), 
+          fontWeight: FontWeight.bold, 
+          fontSize: 12, 
+          letterSpacing: 1,
+        ),
       ),
     );
   }
