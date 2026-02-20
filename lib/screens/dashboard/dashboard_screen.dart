@@ -159,7 +159,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                             const SizedBox(height: 32),
                             StreakGauge(
                               duration: _currentDuration,
-                              size: 180,
+                              size: 280,
                             ),
                             const SizedBox(height: 32),
                             Text(

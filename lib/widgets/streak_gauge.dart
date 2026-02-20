@@ -174,8 +174,8 @@ class GaugePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = (min(size.width, size.height) / 2) - 15;
-    const strokeWidth = 14.0;
+    final radius = (min(size.width, size.height) / 2) - 20;
+    const strokeWidth = 18.0;
 
     // Draw Background Track
     final bgPaint = Paint()
