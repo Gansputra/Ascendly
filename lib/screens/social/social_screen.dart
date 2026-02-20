@@ -104,6 +104,7 @@ class _SocialScreenState extends State<SocialScreen> {
                       ),
                     ),
                   ),
+                const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
     );

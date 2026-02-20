@@ -29,41 +29,59 @@ class _MainWrapperState extends State<MainWrapper> {
     final bool isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      extendBody: true, // Crucial for floating nav bar to overlay content
-      body: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 300),
-        child: _screens[_currentIndex],
-      ),
-      bottomNavigationBar: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(24, 0, 24, 16),
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(24),
-            child: BackdropFilter(
-              filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
-              child: Container(
-                height: 70,
-                decoration: BoxDecoration(
-                  color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
-                  borderRadius: BorderRadius.circular(24),
-                  border: Border.all(
-                    color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
-                    width: 1,
+      extendBody: true,
+      body: Stack(
+        children: [
+          // Content
+          Positioned.fill(
+            child: AnimatedSwitcher(
+              duration: const Duration(milliseconds: 300),
+              child: _screens[_currentIndex],
+            ),
+          ),
+          
+          // Floating Navbar
+          Align(
+            alignment: Alignment.bottomCenter,
+            child: Padding(
+              padding: const EdgeInsets.only(bottom: 24, left: 24, right: 24),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(35),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+                  child: Container(
+                    height: 75,
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.06),
+                      borderRadius: BorderRadius.circular(35),
+                      border: Border.all(
+                        color: (isDark ? Colors.white : Colors.black).withOpacity(0.08),
+                        width: 1.2,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withOpacity(0.1),
+                          blurRadius: 20,
+                          offset: const Offset(0, 10),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _buildNavItem(0, LucideIcons.home, 'Home'),
+                        _buildNavItem(1, LucideIcons.barChart3, 'Stats'),
+                        _buildNavItem(2, LucideIcons.users, 'Social'),
+                        _buildNavItem(3, LucideIcons.user, 'Profile'),
+                      ],
+                    ),
                   ),
-                ),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
-                  children: [
-                    _buildNavItem(0, LucideIcons.home, 'Home'),
-                    _buildNavItem(1, LucideIcons.barChart3, 'Stats'),
-                    _buildNavItem(2, LucideIcons.users, 'Social'),
-                    _buildNavItem(3, LucideIcons.user, 'Profile'),
-                  ],
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

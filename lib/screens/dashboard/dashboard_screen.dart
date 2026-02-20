@@ -310,6 +310,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ),
                     const SizedBox(height: 40),
                     Center(child: EmergencyButton(onReset: _loadProfile)),
+                    const SizedBox(height: 100),
                   ],
                 ),
               ),

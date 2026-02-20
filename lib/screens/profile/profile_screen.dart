@@ -122,6 +122,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                     child: const Text('Logout'),
                   ),
+                  const SizedBox(height: 100),
                 ],
               ),
             ),
