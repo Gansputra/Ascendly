@@ -9,6 +9,7 @@ class UserProfile {
   final int xp;
   final int level;
   final DateTime createdAt;
+  final DateTime? lastSeen;
 
   UserProfile({
     required this.id,
@@ -21,6 +22,7 @@ class UserProfile {
     this.xp = 0,
     this.level = 1,
     required this.createdAt,
+    this.lastSeen,
   });
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
@@ -37,6 +39,7 @@ class UserProfile {
       xp: json['xp'] ?? 0,
       level: json['level'] ?? 1,
       createdAt: DateTime.parse(json['created_at']),
+      lastSeen: json['last_seen'] != null ? DateTime.parse(json['last_seen']) : null,
     );
   }
 
@@ -51,6 +54,7 @@ class UserProfile {
       'emergency_uses': emergencyUses,
       'xp': xp,
       'level': level,
+      'last_seen': lastSeen?.toIso8601String(),
     };
   }
 

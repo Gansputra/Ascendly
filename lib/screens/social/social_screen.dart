@@ -10,6 +10,9 @@ import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:ascendly/widgets/skeleton.dart';
+import 'package:ascendly/services/presence_service.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'dart:async';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({Key? key}) : super(key: key);
@@ -21,24 +24,26 @@ class SocialScreen extends StatefulWidget {
 class _SocialScreenState extends State<SocialScreen> {
   final _dbService = DatabaseService();
   final _authService = AuthService();
-  List<Map<String, dynamic>> _friends = [];
   List<Map<String, dynamic>> _pendingRequests = [];
+  List<Map<String, dynamic>> _currentFriends = []; // Added to fix search dialog error
   bool _isLoading = true;
+  late Stream<List<Map<String, dynamic>>> _friendsStream;
 
   @override
   void initState() {
     super.initState();
+    _friendsStream = _dbService.getFriendsStream(_authService.currentUser!.id);
     _loadFriends();
   }
 
   Future<void> _loadFriends() async {
     try {
-      final friends = await _dbService.getFriends(_authService.currentUser!.id);
       final pending = await _dbService.getPendingRequests(_authService.currentUser!.id);
+      final friends = await _dbService.getFriends(_authService.currentUser!.id);
       if (mounted) {
         setState(() {
-          _friends = friends;
           _pendingRequests = pending;
+          _currentFriends = friends;
           _isLoading = false;
         });
       }
@@ -89,21 +94,37 @@ class _SocialScreenState extends State<SocialScreen> {
                       ),
                     ),
                   ),
-                if (_friends.isEmpty && _pendingRequests.isEmpty)
-                  SliverFillRemaining(child: _buildEmptyState())
-                else
-                  SliverPadding(
-                    padding: const EdgeInsets.all(16),
-                    sliver: SliverList(
-                      delegate: SliverChildBuilderDelegate(
-                        (context, index) => Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: _buildFriendTile(_friends[index]),
+                StreamBuilder<List<Map<String, dynamic>>>(
+                  stream: _friendsStream,
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting && _isLoading) {
+                      return const SliverFillRemaining(child: Center(child: CircularProgressIndicator()));
+                    }
+                    final friends = snapshot.data ?? _currentFriends;
+                    // Update current friends for search dialog
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      if (snapshot.hasData && _currentFriends != snapshot.data) {
+                        _currentFriends = snapshot.data!;
+                      }
+                    });
+                    
+                    if (friends.isEmpty && _pendingRequests.isEmpty) {
+                      return SliverFillRemaining(child: _buildEmptyState());
+                    }
+                    return SliverPadding(
+                      padding: const EdgeInsets.all(16),
+                      sliver: SliverList(
+                        delegate: SliverChildBuilderDelegate(
+                          (context, index) => Padding(
+                            padding: const EdgeInsets.only(bottom: 12),
+                            child: _buildFriendTile(friends[index]),
+                          ),
+                          childCount: friends.length,
                         ),
-                        childCount: _friends.length,
                       ),
-                    ),
-                  ),
+                    );
+                  },
+                ),
                 const SliverToBoxAdapter(child: SizedBox(height: 100)),
               ],
             ),
@@ -172,12 +193,23 @@ class _SocialScreenState extends State<SocialScreen> {
   }
 
   Widget _buildFriendTile(Map<String, dynamic> friend) {
+    final profileData = friend['profiles'];
+    final lastSeenStr = profileData['last_seen'] != null 
+        ? DateTime.parse(profileData['last_seen']) 
+        : null;
+    final status = PresenceService.formatLastSeen(lastSeenStr);
+    final isOnline = status == 'Online';
+
     return Card(
       margin: EdgeInsets.zero,
       child: InkWell(
         onTap: () {
           Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ChatScreen(friendId: friend['profiles']['id'], friendNickname: friend['profiles']['nickname']),
+            builder: (_) => ChatScreen(
+              friendId: profileData['id'], 
+              friendNickname: profileData['nickname'],
+              friendLastSeen: lastSeenStr,
+            ),
           ));
         },
         borderRadius: BorderRadius.circular(16),
@@ -185,17 +217,41 @@ class _SocialScreenState extends State<SocialScreen> {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
-              const CircleAvatar(
-                backgroundColor: AppTheme.primaryColor,
-                child: Icon(Icons.person, color: Colors.white),
+              Stack(
+                children: [
+                  const CircleAvatar(
+                    backgroundColor: AppTheme.primaryColor,
+                    child: Icon(Icons.person, color: Colors.white),
+                  ),
+                  if (isOnline)
+                    Positioned(
+                      right: 0,
+                      bottom: 0,
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: BoxDecoration(
+                          color: AppTheme.successColor,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppTheme.surfaceColor, width: 2),
+                        ),
+                      ),
+                    ),
+                ],
               ),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(friend['profiles']['nickname'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    const Text('Online', style: TextStyle(color: AppTheme.successColor, fontSize: 12)),
+                    Text(profileData['nickname'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                    Text(
+                      status, 
+                      style: TextStyle(
+                        color: isOnline ? AppTheme.successColor : AppTheme.textSecondary, 
+                        fontSize: 12
+                      )
+                    ),
                   ],
                 ),
               ),
@@ -278,7 +334,7 @@ class _SocialScreenState extends State<SocialScreen> {
                     itemCount: searchResults.length,
                     itemBuilder: (context, index) {
                       final user = searchResults[index];
-                      final isAlreadyFriend = _friends.any((f) {
+                      final isAlreadyFriend = _currentFriends.any((f) {
                         try {
                           return f['profiles']['id'] == user.id;
                         } catch (e) {
@@ -445,11 +501,13 @@ class _SocialScreenState extends State<SocialScreen> {
 class ChatScreen extends StatefulWidget {
   final String friendId;
   final String friendNickname;
+  final DateTime? friendLastSeen;
 
   const ChatScreen({
     Key? key,
     required this.friendId,
     required this.friendNickname,
+    this.friendLastSeen,
   }) : super(key: key);
 
   @override
@@ -461,23 +519,80 @@ class _ChatScreenState extends State<ChatScreen> {
   final _dbService = DatabaseService();
   final _authService = AuthService();
   late Stream<List<Message>> _chatStream;
+  late RealtimeChannel _typingChannel;
+  bool _isFriendTyping = false;
+  Timer? _typingTimer;
 
   @override
   void initState() {
     super.initState();
     _chatStream = _dbService.getChatStream(_authService.currentUser!.id, widget.friendId);
+    
+    // Typing indicator channel
+    final roomId = _getRoomId(_authService.currentUser!.id, widget.friendId);
+    _typingChannel = PresenceService().getTypingChannel(roomId);
+    
+    _typingChannel.onBroadcast(event: 'typing', callback: (payload) {
+      if (payload['user_id'] == widget.friendId) {
+        if (mounted) {
+          setState(() {
+            _isFriendTyping = payload['is_typing'] ?? false;
+          });
+        }
+      }
+    }).subscribe();
+  }
+
+  String _getRoomId(String id1, String id2) {
+    final ids = [id1, id2]..sort();
+    return ids.join('_');
   }
 
   @override
   void dispose() {
     _messageController.dispose();
+    _typingTimer?.cancel();
+    _typingChannel.unsubscribe();
     super.dispose();
+  }
+
+  void _onTypingChanged(String value) {
+    PresenceService().setTyping(
+      _getRoomId(_authService.currentUser!.id, widget.friendId),
+      _authService.currentUser!.id,
+      value.isNotEmpty,
+    );
+
+    _typingTimer?.cancel();
+    _typingTimer = Timer(const Duration(seconds: 2), () {
+      PresenceService().setTyping(
+        _getRoomId(_authService.currentUser!.id, widget.friendId),
+        _authService.currentUser!.id,
+        false,
+      );
+    });
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: Text(widget.friendNickname)),
+      appBar: AppBar(
+        title: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(widget.friendNickname, style: const TextStyle(fontSize: 16)),
+            Text(
+              PresenceService.formatLastSeen(widget.friendLastSeen),
+              style: TextStyle(
+                fontSize: 10, 
+                color: PresenceService.formatLastSeen(widget.friendLastSeen) == 'Online' 
+                  ? AppTheme.successColor 
+                  : AppTheme.textSecondary
+              ),
+            ),
+          ],
+        ),
+      ),
       body: Column(
         children: [
           Expanded(
@@ -496,25 +611,29 @@ class _ChatScreenState extends State<ChatScreen> {
                   padding: const EdgeInsets.all(16),
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
-                    final message = messages[index]; // Use directly as newest is index 0
+                    final message = messages[index];
                     final isMe = message.senderId == _authService.currentUser!.id;
                     
-                    if (isMe) {
-                      return FadeInRight(
-                        duration: const Duration(milliseconds: 300),
-                        child: _buildMessageBubble(message, isMe),
-                      );
-                    } else {
-                      return FadeInLeft(
-                        duration: const Duration(milliseconds: 300),
-                        child: _buildMessageBubble(message, isMe),
-                      );
-                    }
+                    return FadeInUp(
+                      duration: const Duration(milliseconds: 200),
+                      child: _buildMessageBubble(message, isMe),
+                    );
                   },
                 );
               },
             ),
           ),
+          if (_isFriendTyping)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${widget.friendNickname} is typing...',
+                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppTheme.primaryColor),
+                ),
+              ),
+            ),
           _buildMessageInput(),
         ],
       ),
@@ -571,6 +690,7 @@ class _ChatScreenState extends State<ChatScreen> {
           Expanded(
             child: TextField(
               controller: _messageController,
+              onChanged: _onTypingChanged,
               decoration: const InputDecoration(
                 hintText: 'Type a message...',
                 border: InputBorder.none,
@@ -582,7 +702,8 @@ class _ChatScreenState extends State<ChatScreen> {
             onPressed: () async {
               final content = _messageController.text.trim();
               if (content.isNotEmpty) {
-                _messageController.clear(); // Clear immediately for better UX
+                _messageController.clear();
+                _onTypingChanged(''); // Stop typing indicator
                 await _dbService.sendMessage(
                   _authService.currentUser!.id,
                   widget.friendId,

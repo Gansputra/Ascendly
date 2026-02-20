@@ -7,6 +7,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:ascendly/core/theme.dart';
 
+import 'package:ascendly/services/auth_service.dart';
+import 'package:ascendly/services/presence_service.dart';
+
 class MainWrapper extends StatefulWidget {
   const MainWrapper({super.key});
 
@@ -16,6 +19,21 @@ class MainWrapper extends StatefulWidget {
 
 class _MainWrapperState extends State<MainWrapper> {
   int _currentIndex = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    final user = AuthService().currentUser;
+    if (user != null) {
+      PresenceService().initialize(user.id);
+    }
+  }
+
+  @override
+  void dispose() {
+    PresenceService().dispose();
+    super.dispose();
+  }
 
   final List<Widget> _screens = [
     const DashboardScreen(),

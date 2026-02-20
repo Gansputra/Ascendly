@@ -19,6 +19,12 @@ class DatabaseService {
     }
   }
 
+  Future<void> updateLastSeen(String userId) async {
+    await _client.from('profiles').update({
+      'last_seen': DateTime.now().toUtc().toIso8601String(),
+    }).eq('id', userId);
+  }
+
   Future<void> upsertProfile(UserProfile profile) async {
     await _client.from('profiles').upsert(profile.toJson());
   }
@@ -72,6 +78,14 @@ class DatabaseService {
       'receiver_id': receiverId,
       'content': content,
     });
+  }
+
+  Stream<List<Map<String, dynamic>>> getFriendsStream(String userId) {
+    // This is a bit complex in Supabase without proper view. 
+    // We'll listen to the profiles table for any changes to user profiles that are friends.
+    // For simplicity, we'll return a stream that polls or uses a channel for updates.
+    return Stream.periodic(const Duration(seconds: 30))
+        .asyncMap((_) => getFriends(userId));
   }
 
   Future<List<Map<String, dynamic>>> getFriends(String userId) async {
