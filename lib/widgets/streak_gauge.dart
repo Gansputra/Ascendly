@@ -20,6 +20,8 @@ class StreakGauge extends StatefulWidget {
 class _StreakGaugeState extends State<StreakGauge> with TickerProviderStateMixin {
   late AnimationController _pulseController;
   late AnimationController _shineController;
+  late AnimationController _drawController;
+  late Animation<double> _drawAnimation;
 
   @override
   void initState() {
@@ -33,10 +35,27 @@ class _StreakGaugeState extends State<StreakGauge> with TickerProviderStateMixin
       vsync: this,
       duration: const Duration(seconds: 3),
     );
+
+    _drawController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    );
+
+    _drawAnimation = CurvedAnimation(
+      parent: _drawController,
+      curve: Curves.fastOutSlowIn,
+    );
     
-    // Periodically trigger shine
-    Timer.periodic(const Duration(seconds: 6), (timer) {
-      if (mounted) _shineController.forward(from: 0);
+    // Start draw animation
+    _drawController.forward();
+    
+    // Periodically trigger shine (start after draw finish)
+    Future.delayed(const Duration(milliseconds: 2500), () {
+      if (mounted) {
+        Timer.periodic(const Duration(seconds: 6), (timer) {
+          if (mounted) _shineController.forward(from: 0);
+        });
+      }
     });
   }
 
@@ -44,6 +63,7 @@ class _StreakGaugeState extends State<StreakGauge> with TickerProviderStateMixin
   void dispose() {
     _pulseController.dispose();
     _shineController.dispose();
+    _drawController.dispose();
     super.dispose();
   }
 
@@ -82,12 +102,12 @@ class _StreakGaugeState extends State<StreakGauge> with TickerProviderStateMixin
           
           // Custom Painter for Gauge
           AnimatedBuilder(
-            animation: _shineController,
+            animation: Listenable.merge([_shineController, _drawController]),
             builder: (context, child) {
               return CustomPaint(
                 size: Size(widget.size, widget.size),
                 painter: GaugePainter(
-                  progress: progress,
+                  progress: progress * _drawAnimation.value,
                   color: Colors.white,
                   backgroundColor: Colors.white.withOpacity(0.15),
                   shineProgress: _shineController.value,
