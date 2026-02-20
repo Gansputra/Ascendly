@@ -15,6 +15,7 @@ import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:ascendly/widgets/skeleton.dart';
 import 'package:ascendly/widgets/streak_gauge.dart';
+import 'package:ascendly/screens/onboarding/personalization_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -56,6 +57,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final hasJournal = await _dbService.hasJournalToday(_authService.currentUser!.id);
     
     if (mounted) {
+      if (profile == null || profile.goal == null) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const PersonalizationScreen()),
+        );
+        return;
+      }
       setState(() {
         _profile = profile;
         _isLoading = false;

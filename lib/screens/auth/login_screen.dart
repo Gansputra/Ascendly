@@ -1,6 +1,7 @@
 import 'package:ascendly/screens/auth/register_screen.dart';
 import 'package:ascendly/screens/splash_screen.dart';
 import 'package:ascendly/services/auth_service.dart';
+import 'package:ascendly/screens/main_wrapper.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:animate_do/animate_do.dart';
@@ -22,9 +23,14 @@ class _LoginScreenState extends State<LoginScreen> {
     setState(() => _isLoading = true);
     try {
       await _authService.signIn(_emailController.text, _passwordController.text);
+      // MainWrapper will be handled by StreamBuilder in main.dart, 
+      // but we push it here for immediate feedback if needed or just pop back
       if (mounted) {
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
+        // We don't necessarily need to push it because main.dart is reactive,
+        // but if we do, push MainWrapper directly to avoid double splash.
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainWrapper()),
+          (route) => false,
         );
       }
     } catch (e) {

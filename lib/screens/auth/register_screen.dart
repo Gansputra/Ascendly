@@ -1,5 +1,6 @@
 import 'package:ascendly/screens/splash_screen.dart';
 import 'package:ascendly/services/auth_service.dart';
+import 'package:ascendly/screens/onboarding/personalization_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:animate_do/animate_do.dart';
@@ -23,10 +24,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       await _authService.signUp(_emailController.text, _passwordController.text);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Registration successful! Please check your email.')),
+          const SnackBar(content: Text('Registration successful!')),
         );
-        Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const SplashScreen()),
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const PersonalizationScreen()),
+          (route) => false,
         );
       }
     } catch (e) {
