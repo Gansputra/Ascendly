@@ -14,6 +14,7 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
 import 'package:ascendly/widgets/skeleton.dart';
+import 'package:ascendly/widgets/streak_gauge.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -152,18 +153,29 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         child: Column(
                           children: [
                             const Text(
-                              'STAYING STRONG FOR',
-                              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, letterSpacing: 2),
+                              'STAYING STRONG',
+                              style: TextStyle(color: Colors.white70, fontWeight: FontWeight.bold, letterSpacing: 3, fontSize: 12),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 32),
+                            StreakGauge(
+                              duration: _currentDuration,
+                              size: 180,
+                            ),
+                            const SizedBox(height: 32),
                             Text(
                               _formatDuration(_currentDuration),
-                              style: const TextStyle(color: Colors.white, fontSize: 32, fontWeight: FontWeight.bold, fontFamily: 'Courier'),
+                              style: TextStyle(
+                                color: Colors.white.withOpacity(0.9),
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1,
+                                fontFamily: 'monospace',
+                              ),
                             ),
-                            const SizedBox(height: 16),
+                            const SizedBox(height: 8),
                             const Text(
-                              'REAL-TIME PROGRESS',
-                              style: TextStyle(color: Colors.white54, fontSize: 12, letterSpacing: 2),
+                              'TOTAL PROGRESS',
+                              style: TextStyle(color: Colors.white54, fontSize: 10, letterSpacing: 2),
                             ),
                             const SizedBox(height: 24),
                             // XP Progress Bar
