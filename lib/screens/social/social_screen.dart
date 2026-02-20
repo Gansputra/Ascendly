@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:ascendly/core/theme.dart';
 import 'package:ascendly/models/social_models.dart';
 import 'package:ascendly/models/user_profile.dart';
@@ -11,7 +12,7 @@ import 'package:animate_do/animate_do.dart';
 import 'package:ascendly/widgets/skeleton.dart';
 
 class SocialScreen extends StatefulWidget {
-  const SocialScreen({super.key});
+  const SocialScreen({Key? key}) : super(key: key);
 
   @override
   State<SocialScreen> createState() => _SocialScreenState();
@@ -286,28 +287,13 @@ class _SocialScreenState extends State<SocialScreen> {
                       
                       return ListTile(
                         contentPadding: EdgeInsets.zero,
+                        onTap: () => _showUserProfilePreview(user, isAlreadyFriend),
                         leading: const CircleAvatar(backgroundColor: AppTheme.primaryColor, child: Icon(Icons.person, color: Colors.white, size: 20)),
                         title: Text(user.nickname ?? 'Anonymous', style: const TextStyle(fontWeight: FontWeight.bold)),
-                        subtitle: Text('ID: ${user.id.substring(0, 8)}...', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.3))),
+                        subtitle: Text('Tap to view profile', style: TextStyle(fontSize: 10, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))),
                         trailing: isAlreadyFriend 
-                          ? const Text('Friend', style: TextStyle(color: Colors.green, fontSize: 12))
-                          : ElevatedButton(
-                              onPressed: () async {
-                                await _dbService.addFriend(_authService.currentUser!.id, user.id);
-                                if (context.mounted) {
-                                  Navigator.pop(context);
-                                  _loadFriends();
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    SnackBar(content: Text('Added ${user.nickname} as friend!')),
-                                  );
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(
-                                visualDensity: VisualDensity.compact,
-                                backgroundColor: AppTheme.primaryColor,
-                              ),
-                              child: const Text('Add', style: TextStyle(color: Colors.white, fontSize: 12)),
-                            ),
+                          ? const Icon(LucideIcons.checkCircle2, color: AppTheme.successColor, size: 20)
+                          : const Icon(Icons.chevron_right, color: AppTheme.primaryColor),
                       );
                     },
                   ),
@@ -319,13 +305,151 @@ class _SocialScreenState extends State<SocialScreen> {
       ),
     );
   }
+
+  void _showUserProfilePreview(UserProfile user, bool isAlreadyFriend) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    
+    showDialog(
+      context: context,
+      builder: (context) => ZoomIn(
+        duration: const Duration(milliseconds: 300),
+        child: Dialog(
+          backgroundColor: Colors.transparent,
+          insetPadding: const EdgeInsets.symmetric(horizontal: 40),
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              // Glassmorphic Container
+              ClipRRect(
+                borderRadius: BorderRadius.circular(32),
+                child: BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 15, sigmaY: 15),
+                  child: Container(
+                    padding: const EdgeInsets.fromLTRB(24, 64, 24, 24),
+                    decoration: BoxDecoration(
+                      color: (isDark ? Colors.white : Colors.black).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(32),
+                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          user.nickname ?? 'Anonymous',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+                        ),
+                        const SizedBox(height: 8),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.2),
+                            borderRadius: BorderRadius.circular(20),
+                          ),
+                          child: Text(
+                            'Level ${user.level}',
+                            style: const TextStyle(color: AppTheme.primaryColor, fontWeight: FontWeight.bold, fontSize: 12),
+                          ),
+                        ),
+                        const SizedBox(height: 24),
+                        // Stats Row
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceAround,
+                          children: [
+                            _buildMiniStat('Goal', user.goal ?? 'Not set', LucideIcons.target),
+                            _buildMiniStat('XP', '${user.xp}', LucideIcons.zap),
+                          ],
+                        ),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: isAlreadyFriend
+                            ? OutlinedButton.icon(
+                                onPressed: () => Navigator.pop(context),
+                                icon: const Icon(LucideIcons.check),
+                                label: const Text('Already Friends'),
+                                style: OutlinedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  side: BorderSide(color: AppTheme.successColor.withOpacity(0.5)),
+                                  foregroundColor: AppTheme.successColor,
+                                ),
+                              )
+                            : ElevatedButton.icon(
+                                onPressed: () async {
+                                  await _dbService.addFriend(_authService.currentUser!.id, user.id);
+                                  if (context.mounted) {
+                                    Navigator.pop(context); // Close preview
+                                    Navigator.pop(context); // Close search dialog
+                                    _loadFriends();
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Added ${user.nickname} as friend!')),
+                                    );
+                                  }
+                                },
+                                icon: const Icon(LucideIcons.userPlus),
+                                label: const Text('Add Friend'),
+                                style: ElevatedButton.styleFrom(
+                                  padding: const EdgeInsets.symmetric(vertical: 16),
+                                  backgroundColor: AppTheme.primaryColor,
+                                  foregroundColor: Colors.white,
+                                  elevation: 8,
+                                  shadowColor: AppTheme.primaryColor.withOpacity(0.4),
+                                ),
+                              ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              ),
+              // Floating Avatar
+              Positioned(
+                top: -40,
+                child: Container(
+                  padding: const EdgeInsets.all(4),
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
+                  child: CircleAvatar(
+                    radius: 40,
+                    backgroundColor: AppTheme.primaryColor,
+                    child: Text(
+                      (user.nickname ?? 'A')[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMiniStat(String label, String value, IconData icon) {
+    return Column(
+      children: [
+        Icon(icon, size: 20, color: AppTheme.primaryColor.withOpacity(0.7)),
+        const SizedBox(height: 8),
+        Text(label, style: const TextStyle(fontSize: 10, color: AppTheme.textSecondary, letterSpacing: 1)),
+        const SizedBox(height: 4),
+        Text(value, style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold)),
+      ],
+    );
+  }
 }
 
 class ChatScreen extends StatefulWidget {
   final String friendId;
   final String friendNickname;
 
-  const ChatScreen({super.key, required this.friendId, required this.friendNickname});
+  const ChatScreen({
+    Key? key,
+    required this.friendId,
+    required this.friendNickname,
+  }) : super(key: key);
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
