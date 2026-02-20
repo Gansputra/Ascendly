@@ -5,6 +5,7 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class BadgesScreen extends StatefulWidget {
   const BadgesScreen({super.key});
@@ -50,7 +51,7 @@ class _BadgesScreenState extends State<BadgesScreen> {
         centerTitle: true,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const GridSkeleton()
           : _allAchievements.isEmpty
               ? _buildEmptyState()
               : GridView.builder(

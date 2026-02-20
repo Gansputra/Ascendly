@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class SocialScreen extends StatefulWidget {
   const SocialScreen({super.key});
@@ -61,7 +62,7 @@ class _SocialScreenState extends State<SocialScreen> {
         ],
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const SocialSkeleton()
           : CustomScrollView(
               slivers: [
                 if (_pendingRequests.isNotEmpty)
@@ -260,7 +261,12 @@ class _SocialScreenState extends State<SocialScreen> {
               ),
               const SizedBox(height: 16),
               if (isSearching)
-                const Center(child: Padding(padding: EdgeInsets.all(20), child: CircularProgressIndicator()))
+                Column(
+                  children: List.generate(3, (index) => const Padding(
+                    padding: EdgeInsets.only(bottom: 12),
+                    child: Skeleton(height: 60),
+                  )),
+                )
               else if (searchController.text.length >= 3 && searchResults.isEmpty)
                 Center(child: Padding(padding: const EdgeInsets.all(20), child: Text('No users found', style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)))))
               else
@@ -354,7 +360,7 @@ class _ChatScreenState extends State<ChatScreen> {
               stream: _chatStream,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(child: CircularProgressIndicator());
+                  return const ChatSkeleton();
                 }
                 if (!snapshot.hasData || snapshot.data!.isEmpty) {
                   return const Center(child: Text('No messages yet. Say hi!'));

@@ -5,6 +5,7 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class JournalHistoryScreen extends StatefulWidget {
   const JournalHistoryScreen({super.key});
@@ -53,7 +54,7 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
         elevation: 0,
       ),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ListSkeleton()
           : _history.isEmpty
               ? _buildEmptyState()
               : ListView.builder(

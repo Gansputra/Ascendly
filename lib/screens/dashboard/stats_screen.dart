@@ -7,6 +7,7 @@ import 'package:intl/intl.dart';
 import 'package:table_calendar/table_calendar.dart';
 import 'package:fl_chart/fl_chart.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class StatsScreen extends StatefulWidget {
   const StatsScreen({super.key});
@@ -56,7 +57,7 @@ class _StatsScreenState extends State<StatsScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Insight Hub')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const StatsSkeleton()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(

@@ -7,6 +7,7 @@ import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -52,7 +53,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const ProfileSkeleton()
           : SingleChildScrollView(
               padding: const EdgeInsets.all(24),
               child: Column(

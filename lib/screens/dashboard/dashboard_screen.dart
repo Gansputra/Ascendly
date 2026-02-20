@@ -13,6 +13,7 @@ import 'package:ascendly/services/gamification_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:ascendly/screens/settings/settings_screen.dart';
 import 'package:intl/intl.dart';
+import 'package:ascendly/widgets/skeleton.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -97,7 +98,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       body: _isLoading
-          ? const Center(child: CircularProgressIndicator())
+          ? const DashboardSkeleton()
           : SafeArea(
               child: SingleChildScrollView(
                 padding: const EdgeInsets.all(24.0),
