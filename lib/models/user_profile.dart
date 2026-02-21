@@ -10,8 +10,10 @@ class UserProfile {
   final int level;
   final DateTime createdAt;
   final DateTime? lastSeen;
+  final String? avatarUrl;
 
   UserProfile({
+
     required this.id,
     this.nickname,
     this.goal,
@@ -23,7 +25,9 @@ class UserProfile {
     this.level = 1,
     required this.createdAt,
     this.lastSeen,
+    this.avatarUrl,
   });
+
 
   factory UserProfile.fromJson(Map<String, dynamic> json) {
     return UserProfile(
@@ -40,7 +44,9 @@ class UserProfile {
       level: json['level'] ?? 1,
       createdAt: DateTime.parse(json['created_at']),
       lastSeen: json['last_seen'] != null ? DateTime.parse(json['last_seen']) : null,
+      avatarUrl: json['avatar_url'],
     );
+
   }
 
   Map<String, dynamic> toJson() {
@@ -55,7 +61,9 @@ class UserProfile {
       'xp': xp,
       'level': level,
       'last_seen': lastSeen?.toIso8601String(),
+      'avatar_url': avatarUrl,
     };
+
   }
 
   Duration get currentStreakDuration {

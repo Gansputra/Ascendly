@@ -144,10 +144,12 @@ class _SocialScreenState extends State<SocialScreen> {
         ),
         child: Row(
           children: [
-            const CircleAvatar(
+            CircleAvatar(
               backgroundColor: AppTheme.primaryColor,
-              child: Icon(Icons.person, color: Colors.white, size: 20),
+              backgroundImage: sender['avatar_url'] != null ? NetworkImage(sender['avatar_url']) : null,
+              child: sender['avatar_url'] == null ? const Icon(Icons.person, color: Colors.white, size: 20) : null,
             ),
+
             const SizedBox(width: 12),
             Expanded(
               child: Column(
@@ -219,10 +221,12 @@ class _SocialScreenState extends State<SocialScreen> {
             children: [
               Stack(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     backgroundColor: AppTheme.primaryColor,
-                    child: Icon(Icons.person, color: Colors.white),
+                    backgroundImage: profileData['avatar_url'] != null ? NetworkImage(profileData['avatar_url']) : null,
+                    child: profileData['avatar_url'] == null ? const Icon(Icons.person, color: Colors.white) : null,
                   ),
+
                   if (isOnline)
                     Positioned(
                       right: 0,
@@ -471,11 +475,15 @@ class _SocialScreenState extends State<SocialScreen> {
                   child: CircleAvatar(
                     radius: 40,
                     backgroundColor: AppTheme.primaryColor,
-                    child: Text(
-                      (user.nickname ?? 'A')[0].toUpperCase(),
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
-                    ),
+                    backgroundImage: user.avatarUrl != null ? NetworkImage(user.avatarUrl!) : null,
+                    child: user.avatarUrl == null 
+                      ? Text(
+                          (user.nickname ?? 'A')[0].toUpperCase(),
+                          style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
+                        )
+                      : null,
                   ),
+
                 ),
               ),
             ],
@@ -577,17 +585,31 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        title: Row(
           children: [
-            Text(widget.friendNickname, style: const TextStyle(fontSize: 16)),
-            Text(
-              PresenceService.formatLastSeen(widget.friendLastSeen),
-              style: TextStyle(
-                fontSize: 10, 
-                color: PresenceService.formatLastSeen(widget.friendLastSeen) == 'Online' 
-                  ? AppTheme.successColor 
-                  : AppTheme.textSecondary
+            CircleAvatar(
+              radius: 16,
+              backgroundColor: AppTheme.primaryColor,
+              child: Text(widget.friendNickname[0].toUpperCase(),
+                  style: const TextStyle(fontSize: 12, color: Colors.white)),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(widget.friendNickname, style: const TextStyle(fontSize: 16)),
+                  Text(
+                    PresenceService.formatLastSeen(widget.friendLastSeen),
+                    style: TextStyle(
+                        fontSize: 10,
+                        color: PresenceService.formatLastSeen(
+                                    widget.friendLastSeen) ==
+                                'Online'
+                            ? AppTheme.successColor
+                            : AppTheme.textSecondary),
+                  ),
+                ],
               ),
             ),
           ],
@@ -612,8 +634,9 @@ class _ChatScreenState extends State<ChatScreen> {
                   itemCount: messages.length,
                   itemBuilder: (context, index) {
                     final message = messages[index];
-                    final isMe = message.senderId == _authService.currentUser!.id;
-                    
+                    final isMe =
+                        message.senderId == _authService.currentUser!.id;
+
                     return FadeInUp(
                       duration: const Duration(milliseconds: 200),
                       child: _buildMessageBubble(message, isMe),
@@ -630,7 +653,10 @@ class _ChatScreenState extends State<ChatScreen> {
                 alignment: Alignment.centerLeft,
                 child: Text(
                   '${widget.friendNickname} is typing...',
-                  style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppTheme.primaryColor),
+                  style: const TextStyle(
+                      fontSize: 12,
+                      fontStyle: FontStyle.italic,
+                      color: AppTheme.primaryColor),
                 ),
               ),
             ),
@@ -639,6 +665,7 @@ class _ChatScreenState extends State<ChatScreen> {
       ),
     );
   }
+
 
   Widget _buildMessageBubble(Message message, bool isMe) {
     final timeStr = DateFormat('HH:mm').format(message.createdAt.toLocal());

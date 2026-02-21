@@ -17,6 +17,8 @@ import 'package:ascendly/widgets/skeleton.dart';
 import 'package:ascendly/widgets/streak_gauge.dart';
 import 'package:ascendly/screens/onboarding/personalization_screen.dart';
 import 'package:ascendly/services/home_widget_service.dart';
+import 'package:lucide_icons/lucide_icons.dart';
+
 
 
 class DashboardScreen extends StatefulWidget {
@@ -133,12 +135,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                               Text(DateFormat('EEEE, d MMM').format(DateTime.now()), style: const TextStyle(color: AppTheme.textSecondary)),
                             ],
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.settings_outlined),
-                            onPressed: () {
+                          GestureDetector(
+                            onTap: () {
                               Navigator.of(context).push(MaterialPageRoute(builder: (_) => const SettingsScreen()));
                             },
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundColor: AppTheme.surfaceColor,
+                              backgroundImage: _profile?.avatarUrl != null ? NetworkImage(_profile!.avatarUrl!) : null,
+                              child: _profile?.avatarUrl == null
+                                  ? Icon(LucideIcons.user, size: 20, color: AppTheme.textSecondary)
+                                  : null,
+
+                            ),
                           ),
+
                         ],
                       ),
                     ),

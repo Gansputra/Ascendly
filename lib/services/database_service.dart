@@ -3,7 +3,9 @@ import 'package:ascendly/models/social_models.dart';
 import 'package:ascendly/models/achievement_model.dart';
 import 'package:ascendly/models/quest_model.dart';
 import 'package:ascendly/models/journal_model.dart';
+import 'dart:typed_data';
 import 'package:flutter/foundation.dart';
+
 import 'package:supabase_flutter/supabase_flutter.dart';
 
 class DatabaseService {
@@ -267,4 +269,28 @@ class DatabaseService {
         
     return (response as List).map((j) => Journal.fromJson(j)).toList();
   }
+  Future<String?> uploadAvatar(String userId, Uint8List bytes, String extension) async {
+    try {
+      final fileName = '$userId/avatar.${DateTime.now().millisecondsSinceEpoch}.$extension';
+      
+      await _client.storage.from('avatars').uploadBinary(
+        fileName,
+        bytes,
+        fileOptions: FileOptions(upsert: true, contentType: 'image/$extension'),
+      );
+
+
+      final String publicUrl = _client.storage.from('avatars').getPublicUrl(fileName);
+      
+      await _client.from('profiles').update({
+        'avatar_url': publicUrl,
+      }).eq('id', userId);
+
+      return publicUrl;
+    } catch (e) {
+      debugPrint('DatabaseService: uploadAvatar Error: $e');
+      return null;
+    }
+  }
 }
+

@@ -9,7 +9,9 @@ import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:animate_do/animate_do.dart';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:ascendly/widgets/skeleton.dart';
+
 
 
 
@@ -52,7 +54,45 @@ class _ProfileScreenState extends State<ProfileScreen> {
     }
   }
 
+  Future<void> _pickImage() async {
+
+
+    final picker = ImagePicker();
+    final XFile? image = await picker.pickImage(
+      source: ImageSource.gallery,
+      maxWidth: 512,
+      maxHeight: 512,
+      imageQuality: 75,
+    );
+
+    if (image != null) {
+      final bytes = await image.readAsBytes();
+      final extension = image.path.split('.').last;
+      
+      setState(() => _isLoading = true);
+      
+      final url = await _dbService.uploadAvatar(_authService.currentUser!.id, bytes, extension);
+      
+      if (url != null) {
+        await _loadProfile();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Profile picture updated!'), backgroundColor: Colors.green),
+          );
+        }
+      } else {
+        setState(() => _isLoading = false);
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to update profile picture'), backgroundColor: Colors.red),
+          );
+        }
+      }
+    }
+  }
+
   @override
+
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(title: const Text('Profile')),
@@ -63,14 +103,38 @@ class _ProfileScreenState extends State<ProfileScreen> {
               child: Column(
                 children: [
                   Center(
-
-                    child: CircleAvatar(
-                      radius: 50,
-                      backgroundColor: Theme.of(context).colorScheme.surface,
-                      child: Icon(LucideIcons.user, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
-
+                    child: GestureDetector(
+                      onTap: _pickImage,
+                      child: Stack(
+                        children: [
+                          CircleAvatar(
+                            radius: 60,
+                            backgroundColor: Theme.of(context).colorScheme.surface,
+                            backgroundImage: _profile?.avatarUrl != null 
+                                ? NetworkImage(_profile!.avatarUrl!) 
+                                : null,
+                            child: _profile?.avatarUrl == null
+                                ? Icon(LucideIcons.user, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5))
+                                : null,
+                          ),
+                          Positioned(
+                            bottom: 0,
+                            right: 0,
+                            child: Container(
+                              padding: const EdgeInsets.all(8),
+                              decoration: BoxDecoration(
+                                color: AppTheme.primaryColor,
+                                shape: BoxShape.circle,
+                                border: Border.all(color: Theme.of(context).colorScheme.surface, width: 3),
+                              ),
+                              child: const Icon(Icons.camera_alt, size: 16, color: Colors.white),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
+
                   const SizedBox(height: 24),
                   Text(
                     _profile?.nickname ?? 'Anonymous',
