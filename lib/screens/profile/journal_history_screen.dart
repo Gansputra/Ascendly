@@ -72,28 +72,34 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
   }
 
   Widget _buildEmptyState() {
+    final colorScheme = Theme.of(context).colorScheme;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.history, size: 64, color: Colors.white.withOpacity(0.1)),
+          Icon(Icons.history, size: 64, color: colorScheme.onSurface.withOpacity(0.1)),
           const SizedBox(height: 16),
-          const Text('No journals yet', style: TextStyle(color: Colors.white54)),
+          Text('No journals yet', style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5))),
           const SizedBox(height: 8),
-          const Text('Start checking in on the dashboard!', style: TextStyle(color: Colors.white24, fontSize: 12)),
+          Text('Start checking in on the dashboard!', style: TextStyle(color: colorScheme.onSurface.withOpacity(0.3), fontSize: 12)),
         ],
       ),
     );
   }
 
+
   Widget _buildHistoryCard(Journal journal) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
+
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.03),
+        color: isDark ? Colors.white.withOpacity(0.03) : Colors.black.withOpacity(0.03),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,11 +115,16 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
                   children: [
                     Text(
                       journal.mood.toUpperCase(),
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 2, color: Colors.white54),
+                      style: TextStyle(
+                        fontSize: 10, 
+                        fontWeight: FontWeight.bold, 
+                        letterSpacing: 2, 
+                        color: colorScheme.onSurface.withOpacity(0.5)
+                      ),
                     ),
                     Text(
                       DateFormat('MMM dd, yyyy').format(journal.createdAt),
-                      style: const TextStyle(fontSize: 10, color: Colors.white24),
+                      style: TextStyle(fontSize: 10, color: colorScheme.onSurface.withOpacity(0.3)),
                     ),
                   ],
                 ),
@@ -121,12 +132,20 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
                 if (journal.note != null && journal.note!.isNotEmpty)
                   Text(
                     journal.note!,
-                    style: const TextStyle(fontSize: 14, height: 1.5),
+                    style: TextStyle(
+                      fontSize: 14, 
+                      height: 1.5,
+                      color: colorScheme.onSurface,
+                    ),
                   )
                 else
-                  const Text(
+                  Text(
                     'No additional notes.',
-                    style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: Colors.white24),
+                    style: TextStyle(
+                      fontSize: 14, 
+                      fontStyle: FontStyle.italic, 
+                      color: colorScheme.onSurface.withOpacity(0.3)
+                    ),
                   ),
               ],
             ),
@@ -135,4 +154,5 @@ class _JournalHistoryScreenState extends State<JournalHistoryScreen> {
       ),
     );
   }
+
 }
