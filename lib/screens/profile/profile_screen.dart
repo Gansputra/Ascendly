@@ -8,7 +8,9 @@ import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
 import 'package:animate_do/animate_do.dart';
+import 'package:intl/intl.dart';
 import 'package:ascendly/widgets/skeleton.dart';
+
 
 
 class ProfileScreen extends StatefulWidget {
@@ -121,9 +123,10 @@ class _ProfileScreenState extends State<ProfileScreen> {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  _profile?.goal ?? 'Finding my way...',
+                                  'Stop ${_profile?.goal ?? 'Finding my way...'}',
                                   style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
                                 ),
+
                               ],
                             ),
                           ),
@@ -132,49 +135,53 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     ),
                   ),
                   const SizedBox(height: 32),
-
-                  const SizedBox(height: 12),
-                  _buildProfileTile(
-                    'Joined',
-                    'Feb 2024', // Simplified for demo
-                    LucideIcons.calendar,
+                  // Staggered Menu Items
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 100),
+                    child: _buildProfileTile(
+                      'Joined',
+                      DateFormat('MMMM yyyy').format(_profile?.createdAt ?? DateTime.now()),
+                      LucideIcons.calendar,
+                    ),
                   ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen()));
-                    },
-                    borderRadius: BorderRadius.circular(16),
+                  const SizedBox(height: 16),
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 200),
                     child: _buildProfileTile(
                       'My Achievements',
-                      'View your badges',
+                      'View your earned badges',
                       LucideIcons.medal,
-                      trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const BadgesScreen())),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white24),
                     ),
                   ),
-                  const SizedBox(height: 12),
-                  InkWell(
-                    onTap: () {
-                      Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalHistoryScreen()));
-                    },
-                    borderRadius: BorderRadius.circular(16),
+                  const SizedBox(height: 16),
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 300),
                     child: _buildProfileTile(
                       'My Mood History',
-                      'Check your progress',
+                      'Check your journaling progress',
                       LucideIcons.heart,
-                      trailing: const Icon(Icons.chevron_right, color: AppTheme.textSecondary),
+                      onTap: () => Navigator.push(context, MaterialPageRoute(builder: (_) => const JournalHistoryScreen())),
+                      trailing: const Icon(Icons.arrow_forward_ios, size: 14, color: Colors.white24),
                     ),
                   ),
+
                   const SizedBox(height: 48),
-                  ElevatedButton(
-                    onPressed: _logout,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.errorColor.withOpacity(0.1),
-                      foregroundColor: AppTheme.errorColor,
-                      elevation: 0,
+                  FadeInUp(
+                    delay: const Duration(milliseconds: 400),
+                    child: ElevatedButton(
+                      onPressed: _logout,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppTheme.errorColor.withOpacity(0.1),
+                        foregroundColor: AppTheme.errorColor,
+                        elevation: 0,
+                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      ),
+                      child: const Text('Logout Account'),
                     ),
-                    child: const Text('Logout'),
                   ),
+
                   const SizedBox(height: 100),
                 ],
               ),
@@ -182,33 +189,72 @@ class _ProfileScreenState extends State<ProfileScreen> {
     );
   }
 
-  Widget _buildProfileTile(String title, String subtitle, IconData icon, {Widget? trailing}) {
-    final colorScheme = Theme.of(context).colorScheme;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: colorScheme.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
-      ),
-      child: Row(
-        children: [
-          Icon(icon, color: AppTheme.primaryColor, size: 20),
+  Widget _buildProfileTile(String title, String subtitle, IconData icon, {VoidCallback? onTap, Widget? trailing}) {
+    final theme = Theme.of(context);
+    final colorScheme = theme.colorScheme;
+    final isDark = theme.brightness == Brightness.dark;
 
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title, style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
-                Text(subtitle, style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
-              ],
-            ),
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(24),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+          decoration: BoxDecoration(
+            color: isDark ? colorScheme.surface : Colors.white,
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
+            boxShadow: isDark ? null : [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
           ),
-          if (trailing != null) trailing,
-
-        ],
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: AppTheme.primaryColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(icon, color: AppTheme.primaryColor, size: 20),
+              ),
+              const SizedBox(width: 20),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title.toUpperCase(),
+                      style: TextStyle(
+                        color: colorScheme.onSurface.withOpacity(0.5), 
+                        fontSize: 10, 
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 1,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      subtitle, 
+                      style: TextStyle(
+                        fontWeight: FontWeight.bold, 
+                        color: colorScheme.onSurface,
+                        fontSize: 15,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if (trailing != null) trailing,
+            ],
+          ),
+        ),
       ),
     );
   }
+
 }
