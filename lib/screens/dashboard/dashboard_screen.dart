@@ -16,6 +16,8 @@ import 'package:intl/intl.dart';
 import 'package:ascendly/widgets/skeleton.dart';
 import 'package:ascendly/widgets/streak_gauge.dart';
 import 'package:ascendly/screens/onboarding/personalization_screen.dart';
+import 'package:ascendly/services/home_widget_service.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -75,7 +77,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       AchievementService().checkAchievements(_authService.currentUser!.id, context: context);
       // Complete daily login quest
       GamificationService().completeQuest(_authService.currentUser!.id, 'daily_login', context: context);
+      
+      // Update Home Widget
+      HomeWidgetService.updateStreak(profile.streakStartDate);
     }
+
   }
 
   String _formatDuration(Duration d) {
