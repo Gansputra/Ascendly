@@ -118,8 +118,8 @@ class _BadgesScreenState extends State<BadgesScreen> {
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
                       border: isUnlocked 
-                          ? Border.all(color: Colors.white.withOpacity(0.2), width: 1)
-                          : Border.all(color: Colors.white.withOpacity(0.05), width: 1),
+                          ? Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.2), width: 1)
+                          : Border.all(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05), width: 1),
                       gradient: isUnlocked
                           ? LinearGradient(
                               colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
@@ -127,9 +127,10 @@ class _BadgesScreenState extends State<BadgesScreen> {
                               end: Alignment.bottomRight,
                             )
                           : null,
-                      color: isUnlocked ? null : Colors.white.withOpacity(0.05),
+                      color: isUnlocked ? null : Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                     ),
                   ),
+
                   // Icon
                   Opacity(
                     opacity: isUnlocked ? 1.0 : 0.6,
@@ -164,11 +165,14 @@ class _BadgesScreenState extends State<BadgesScreen> {
               style: TextStyle(
                 fontSize: 11,
                 fontWeight: isUnlocked ? FontWeight.bold : FontWeight.w500,
-                color: isUnlocked ? Colors.white : Colors.white.withOpacity(0.5),
+                color: isUnlocked 
+                  ? (Theme.of(context).brightness == Brightness.dark ? Colors.white : AppTheme.primaryColor)
+                  : Theme.of(context).colorScheme.onSurface.withOpacity(0.5),
               ),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
             ),
+
           ],
         ),
       ),
@@ -178,8 +182,9 @@ class _BadgesScreenState extends State<BadgesScreen> {
   void _showBadgeDetails(Achievement achievement, bool isUnlocked) {
     showModalBottomSheet(
       context: context,
-      backgroundColor: AppTheme.surfaceColor,
+      backgroundColor: Theme.of(context).colorScheme.surface,
       shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+
       builder: (context) {
         return Padding(
           padding: const EdgeInsets.all(32),
@@ -207,14 +212,19 @@ class _BadgesScreenState extends State<BadgesScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.05),
+                    color: Theme.of(context).colorScheme.onSurface.withOpacity(0.05),
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Text(
                     'Requirement: ${achievement.conditionValue} ${achievement.conditionType.replaceAll('_', ' ')}',
-                    style: const TextStyle(fontSize: 12, fontStyle: FontStyle.italic),
+                    style: TextStyle(
+                      fontSize: 12, 
+                      fontStyle: FontStyle.italic,
+                      color: Theme.of(context).colorScheme.onSurface.withOpacity(0.7),
+                    ),
                   ),
                 ),
+
             ],
           ),
         );
