@@ -1,12 +1,14 @@
 import 'package:home_widget/home_widget.dart';
 import 'package:intl/intl.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 class HomeWidgetService {
   static const String _groupId = 'group.ascendly_widget'; // For iOS
   static const String _androidWidgetName = 'AscendlyWidgetProvider';
 
   static Future<void> updateStreak(DateTime? startDate) async {
-    if (startDate == null) return;
+    if (kIsWeb || startDate == null) return;
+
 
     final diff = DateTime.now().difference(startDate);
     final days = diff.inDays;

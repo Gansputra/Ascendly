@@ -196,76 +196,86 @@ class _SocialScreenState extends State<SocialScreen> {
 
   Widget _buildFriendTile(Map<String, dynamic> friend) {
     final profileData = friend['profiles'];
+    final String friendId = profileData['id'];
     final lastSeenStr = profileData['last_seen'] != null 
         ? DateTime.parse(profileData['last_seen']) 
         : null;
-    final status = PresenceService.formatLastSeen(lastSeenStr);
-    final isOnline = status == 'Online';
 
-    return Card(
-      margin: EdgeInsets.zero,
-      child: InkWell(
-        onTap: () {
-          Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ChatScreen(
-              friendId: profileData['id'], 
-              friendNickname: profileData['nickname'],
-              friendLastSeen: lastSeenStr,
-            ),
-          ));
-        },
-        borderRadius: BorderRadius.circular(16),
-        child: Padding(
-          padding: const EdgeInsets.all(16),
-          child: Row(
-            children: [
-              Stack(
+    return StreamBuilder<Set<String>>(
+      stream: PresenceService().onlineUsersStream,
+      initialData: PresenceService().onlineUserIds,
+      builder: (context, presenceSnapshot) {
+        final isOnline = presenceSnapshot.data?.contains(friendId) ?? false;
+
+
+        final status = PresenceService.formatLastSeen(lastSeenStr, isOnline: isOnline);
+
+        return Card(
+          margin: EdgeInsets.zero,
+          child: InkWell(
+            onTap: () {
+              Navigator.of(context).push(MaterialPageRoute(
+                builder: (_) => ChatScreen(
+                  friendId: friendId, 
+                  friendNickname: profileData['nickname'],
+                  friendLastSeen: lastSeenStr,
+                ),
+              ));
+            },
+            borderRadius: BorderRadius.circular(16),
+            child: Padding(
+              padding: const EdgeInsets.all(16),
+              child: Row(
                 children: [
-                  CircleAvatar(
-                    backgroundColor: AppTheme.primaryColor,
-                    backgroundImage: profileData['avatar_url'] != null ? NetworkImage(profileData['avatar_url']) : null,
-                    child: profileData['avatar_url'] == null ? const Icon(Icons.person, color: Colors.white) : null,
-                  ),
-
-                  if (isOnline)
-                    Positioned(
-                      right: 0,
-                      bottom: 0,
-                      child: Container(
-                        width: 12,
-                        height: 12,
-                        decoration: BoxDecoration(
-                          color: AppTheme.successColor,
-                          shape: BoxShape.circle,
-                          border: Border.all(color: AppTheme.surfaceColor, width: 2),
-                        ),
+                  Stack(
+                    children: [
+                      CircleAvatar(
+                        backgroundColor: AppTheme.primaryColor,
+                        backgroundImage: profileData['avatar_url'] != null ? NetworkImage(profileData['avatar_url']) : null,
+                        child: profileData['avatar_url'] == null ? const Icon(Icons.person, color: Colors.white) : null,
                       ),
+                      if (isOnline)
+                        Positioned(
+                          right: 0,
+                          bottom: 0,
+                          child: Container(
+                            width: 12,
+                            height: 12,
+                            decoration: BoxDecoration(
+                              color: AppTheme.successColor,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: Theme.of(context).cardTheme.color ?? AppTheme.surfaceColor, width: 2),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(profileData['nickname'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                        Text(
+                          status, 
+                          style: TextStyle(
+                            color: isOnline ? AppTheme.successColor : AppTheme.textSecondary, 
+                            fontSize: 12
+                          )
+                        ),
+                      ],
                     ),
+                  ),
+                  const Icon(LucideIcons.messageCircle, color: AppTheme.primaryColor),
                 ],
               ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(profileData['nickname'], style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
-                    Text(
-                      status, 
-                      style: TextStyle(
-                        color: isOnline ? AppTheme.successColor : AppTheme.textSecondary, 
-                        fontSize: 12
-                      )
-                    ),
-                  ],
-                ),
-              ),
-              const Icon(LucideIcons.messageCircle, color: AppTheme.primaryColor),
-            ],
+            ),
           ),
-        ),
-      ),
+        );
+      }
     );
   }
+
 
   void _showAddFriendDialog() {
     final searchController = TextEditingController();
@@ -512,11 +522,12 @@ class ChatScreen extends StatefulWidget {
   final DateTime? friendLastSeen;
 
   const ChatScreen({
-    Key? key,
+    super.key,
     required this.friendId,
     required this.friendNickname,
     this.friendLastSeen,
-  }) : super(key: key);
+  });
+
 
   @override
   State<ChatScreen> createState() => _ChatScreenState();
@@ -585,36 +596,42 @@ class _ChatScreenState extends State<ChatScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Row(
-          children: [
-            CircleAvatar(
-              radius: 16,
-              backgroundColor: AppTheme.primaryColor,
-              child: Text(widget.friendNickname[0].toUpperCase(),
-                  style: const TextStyle(fontSize: 12, color: Colors.white)),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(widget.friendNickname, style: const TextStyle(fontSize: 16)),
-                  Text(
-                    PresenceService.formatLastSeen(widget.friendLastSeen),
-                    style: TextStyle(
-                        fontSize: 10,
-                        color: PresenceService.formatLastSeen(
-                                    widget.friendLastSeen) ==
-                                'Online'
-                            ? AppTheme.successColor
-                            : AppTheme.textSecondary),
+        title: StreamBuilder<Set<String>>(
+          stream: PresenceService().onlineUsersStream,
+          initialData: PresenceService().onlineUserIds,
+          builder: (context, presenceSnapshot) {
+            final isOnline = presenceSnapshot.data?.contains(widget.friendId) ?? false;
+            final status = PresenceService.formatLastSeen(widget.friendLastSeen, isOnline: isOnline);
+
+            return Row(
+              children: [
+                CircleAvatar(
+                  radius: 16,
+                  backgroundColor: AppTheme.primaryColor,
+                  child: Text(widget.friendNickname[0].toUpperCase(),
+                      style: const TextStyle(fontSize: 12, color: Colors.white)),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(widget.friendNickname, style: const TextStyle(fontSize: 16)),
+                      Text(
+                        status,
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: isOnline ? AppTheme.successColor : AppTheme.textSecondary),
+                      ),
+                    ],
                   ),
-                ],
-              ),
-            ),
-          ],
+                ),
+              ],
+            );
+          }
         ),
       ),
+
       body: Column(
         children: [
           Expanded(
