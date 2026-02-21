@@ -7,7 +7,9 @@ import 'package:ascendly/services/auth_service.dart';
 import 'package:ascendly/services/database_service.dart';
 import 'package:flutter/material.dart';
 import 'package:lucide_icons/lucide_icons.dart';
+import 'package:animate_do/animate_do.dart';
 import 'package:ascendly/widgets/skeleton.dart';
+
 
 class ProfileScreen extends StatefulWidget {
   const ProfileScreen({super.key});
@@ -58,11 +60,13 @@ class _ProfileScreenState extends State<ProfileScreen> {
               padding: const EdgeInsets.all(24),
               child: Column(
                 children: [
-                  const Center(
+                  Center(
+
                     child: CircleAvatar(
                       radius: 50,
-                      backgroundColor: AppTheme.surfaceColor,
-                      child: Icon(LucideIcons.user, size: 40, color: AppTheme.textSecondary),
+                      backgroundColor: Theme.of(context).colorScheme.surface,
+                      child: Icon(LucideIcons.user, size: 40, color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
+
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -70,16 +74,65 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     _profile?.nickname ?? 'Anonymous',
                     style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
                   ),
+                  const SizedBox(height: 8),
                   Text(
                     _authService.currentUser?.email ?? '',
-                    style: const TextStyle(color: AppTheme.textSecondary),
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurface.withOpacity(0.5)),
                   ),
-                  const SizedBox(height: 40),
-                  _buildProfileTile(
-                    'Current Goal',
-                    _profile?.goal ?? 'Not set',
-                    LucideIcons.target,
+                  const SizedBox(height: 32),
+                  // Focus Card for Goal
+                  FadeIn(
+                    child: Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [AppTheme.primaryColor, AppTheme.secondaryColor],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(24),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.primaryColor.withOpacity(0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 8),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withOpacity(0.2),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(LucideIcons.target, color: Colors.white, size: 24),
+                          ),
+                          const SizedBox(width: 20),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'MY ULTIMATE GOAL',
+                                  style: TextStyle(color: Colors.white70, fontSize: 10, fontWeight: FontWeight.bold, letterSpacing: 1.5),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _profile?.goal ?? 'Finding my way...',
+                                  style: const TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ),
+                  const SizedBox(height: 32),
+
                   const SizedBox(height: 12),
                   _buildProfileTile(
                     'Joined',
@@ -130,26 +183,30 @@ class _ProfileScreenState extends State<ProfileScreen> {
   }
 
   Widget _buildProfileTile(String title, String subtitle, IconData icon, {Widget? trailing}) {
+    final colorScheme = Theme.of(context).colorScheme;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppTheme.surfaceColor,
+        color: colorScheme.surface,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: colorScheme.onSurface.withOpacity(0.05)),
       ),
       child: Row(
         children: [
-          Icon(icon, color: AppTheme.primaryColor),
+          Icon(icon, color: AppTheme.primaryColor, size: 20),
+
           const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: const TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
-                Text(subtitle, style: const TextStyle(fontWeight: FontWeight.bold)),
+                Text(title, style: TextStyle(color: colorScheme.onSurface.withOpacity(0.5), fontSize: 12)),
+                Text(subtitle, style: TextStyle(fontWeight: FontWeight.bold, color: colorScheme.onSurface)),
               ],
             ),
           ),
           if (trailing != null) trailing,
+
         ],
       ),
     );
